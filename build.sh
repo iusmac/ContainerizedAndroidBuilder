@@ -124,15 +124,35 @@ function sourcesMenu() {
             local_manifests/ "${__ARGS__['src-dir']}"/.repo/local_manifests/
 
         case "$action" in
-            1*) containerQuery 'repo-init' "${__ARGS__['repo-url']}" "${__ARGS__['repo-revision']}";;
-            2*) if ! jobs="$(insertJobNum)"; then
-                    continue
-                fi
-                containerQuery 'repo-sync' "$jobs";;
+            1*) sourcesMenu__repoInit;;
+            2*) jobs="$(insertJobNum)" || continue
+                sourcesMenu__repoSync "$jobs";;
             *) printf "Undefined source menu action: %s\n" "$action" >&2
                 exit 1
         esac
     done
+}
+
+function sourcesMenu__repoInit() {
+    if ! containerQuery 'repo-init' \
+        "${__ARGS__['repo-url']}" \
+        "${__ARGS__['repo-revision']}"; then
+            showLogs
+    fi
+}
+
+function sourcesMenu__repoSync(){
+    local jobs="${1?}"
+
+    if containerQuery 'repo-sync' "$jobs"; then
+        whiptail \
+            --backtitle "$__MENU_BACKTITLE__" \
+            --title 'Success' \
+            --msgbox 'The source code was successfully synced' \
+            0 0
+    else
+        showLogs
+    fi
 }
 
 function buildMenu() {
@@ -190,6 +210,8 @@ EOL
             "${__ARGS__['lunch-flavor']}" \
             $build_metalava \
             "$jobs"
+
+        exit $?
     done
 }
 
@@ -302,7 +324,7 @@ function containerQuery() {
     local home="/home/${__USER_IDS__['name']}"
     local query="${1?}"; shift
     local entrypoint="$home"/entrypoint.sh
-    if ! sudo docker run \
+    sudo docker run \
         --tty \
         --rm \
         --name "$__CONTAINER_NAME__" \
@@ -319,15 +341,7 @@ function containerQuery() {
         --volume "${__ARGS__['src-dir']}":"$home"/src \
         --volume "$PWD"/logs:"$home"/logs \
         "$__IMAGE_TAG__" \
-        "$entrypoint" "$query" "$@"; then
-        showLogs
-    else
-        whiptail \
-            --backtitle "$__MENU_BACKTITLE__" \
-            --title 'Success' \
-            --msgbox 'The build was successfully terminated' \
-            0 0
-    fi
+        "$entrypoint" "$query" "$@"
 }
 
 function insertJobNum() {
