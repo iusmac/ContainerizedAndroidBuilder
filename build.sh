@@ -2,7 +2,7 @@
 
 set -o errexit -o pipefail
 
-__DIR__="$(dirname "${BASH_SOURCE[0]}")"
+__DIR__="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 readonly __DIR__
 readonly __IMAGE_TAG__='iusmac/containerized_android_builder_v1.0'
 readonly __CONTAINER_NAME__='containerized_android_builder_v1.0'
