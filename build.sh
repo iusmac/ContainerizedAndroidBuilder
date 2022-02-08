@@ -260,8 +260,8 @@ function suspendMenu() {
     fi
 
     case "$choice" in
-        1*) systemctl hibernate;;
-        2*) systemctl suspend;;
+        1*) systemctl suspend;;
+        2*) systemctl hibernate;;
         *) printf "Undefined suspend menu action: %s\n" "$action" >&2
             exit 1
     esac
