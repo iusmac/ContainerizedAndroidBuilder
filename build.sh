@@ -238,15 +238,7 @@ function build__stop() {
     coproc { sudo docker container stop "$__CONTAINER_NAME__"; }
     local pid="$COPROC_PID"
 
-    while kill -0 "$pid"; do
-        TERM=ansi whiptail \
-            --backtitle "$__MENU_BACKTITLE__" \
-            --title 'Build stop' \
-            --infobox "Trying to stop the build gracefully..." \
-            0 0
-        sleep 1
-    done
-
+    printf "Trying to stop the build gracefully...\n"
     if wait "$pid"; then
         whiptail \
             --backtitle "$__MENU_BACKTITLE__" \
