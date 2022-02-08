@@ -26,6 +26,10 @@ function main() {
                 build_metalava="${4?}" \
                 jobs="${5?}"
 
+            if [ "${USE_CCACHE:-0}" = '1' ]; then
+                ccache -M "$CCACHE_SIZE" || exit $?
+            fi
+
             log 'Running envsetup.sh...'
             # shellcheck disable=SC1091
             source build/envsetup.sh || exit $?
@@ -35,10 +39,6 @@ function main() {
 
             if [ "$build_metalava" = 'true' ]; then
                 build_metalava "$jobs" || exit 1
-            fi
-
-            if [ "${USE_CCACHE:-0}" = '1' ]; then
-                ccache -M "$CCACHE_SIZE" || exit $?
             fi
 
             if [ "$query" = 'bulid-rom' ]; then
