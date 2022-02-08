@@ -70,7 +70,7 @@ function main() {
         'lunch-device' \
         'lunch-flavor'; do
         if [ -z "${__ARGS__[$arg]}" ]; then
-            printf -- "Missing required argument: --%s\n" "${1?}" >&2
+            printf -- "Missing required argument: --%s\n" "$arg" >&2
             exit 1
         fi
     done
