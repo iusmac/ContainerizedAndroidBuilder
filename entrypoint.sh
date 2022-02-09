@@ -8,7 +8,7 @@ function main() {
             local repo_revision="${2?}"
 
             log "Initializing repo '$repo_url' on revision '$repo_revision'..."
-            yes | repo init --depth=1 -u "$repo_url" -b "$repo_revision"
+            yes | repo init --depth=1 -g default,-mips,-darwin -u "$repo_url" -b "$repo_revision"
             ;;
         'repo-sync')
             local jobs="${1?}"
