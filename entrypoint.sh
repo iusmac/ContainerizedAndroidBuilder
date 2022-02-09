@@ -6,10 +6,14 @@ function main() {
         'repo-init')
             local repo_url="${1?}"
             local repo_revision="${2?}"
+
+            log "Initializing repo '$repo_url' on revision '$repo_revision'..."
             yes | repo init --depth=1 -u "$repo_url" -b "$repo_revision"
             ;;
         'repo-sync')
             local jobs="${1?}"
+
+            log "Syncing sources ($jobs jobs)..."
             repo sync -c \
                 --fail-fast \
                 --force-sync \
@@ -34,7 +38,7 @@ function main() {
             # shellcheck disable=SC1091
             source build/envsetup.sh || exit $?
 
-            log 'Preparing build...'
+            log "Preparing $lunch_system build for $lunch_device ($lunch_flavor)..."
             lunch "$lunch_system"_"$lunch_device"-"$lunch_flavor" || exit $?
 
             if [ "$build_metalava" = 'true' ]; then
