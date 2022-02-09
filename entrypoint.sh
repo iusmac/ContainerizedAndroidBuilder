@@ -15,7 +15,7 @@ function main() {
                 --manifest-branch="$repo_revision"
             ;;
         'repo-sync')
-            local jobs="${1?}"
+            local jobs="${1?}"; shift
 
             log "Syncing sources ($jobs jobs)..."
             repo sync \
@@ -25,7 +25,20 @@ function main() {
                 --no-clone-bundle \
                 --no-tags \
                 --optimized-fetch \
-                --jobs="$jobs"
+                --jobs="$jobs" -- "$@"
+            ;;
+        'repo-local-list')
+            set -o pipefail
+
+            local path
+            repo list --path-only | while read -r path; do
+                if grep \
+                    --recursive \
+                    --quiet \
+                    "<project.*$path" .repo/local_manifests/; then
+                    printf -- "%s\n" "$path"
+                fi
+            done
             ;;
         'build-rom'|'build-kernel')
             local lunch_system="${1?}" \

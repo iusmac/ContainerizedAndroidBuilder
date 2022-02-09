@@ -115,7 +115,8 @@ function sourcesMenu() {
             --cancel-button 'Return' \
             --menu 'Select an action' 0 0 0 \
             '1) Init' 'Set repo URL to an android project' \
-            '2) Sync' 'Sync all sources' \
+            '2) Sync All' 'Sync all sources' \
+            '3) Sync "local_manifests" projects' 'Selectively sync projects in "local_manifests"' \
             3>&1 1>&2 2>&3)"; then
             return 0
         fi
@@ -128,8 +129,8 @@ function sourcesMenu() {
 
         case "$action" in
             1*) sourcesMenu__repoInit;;
-            2*) jobs="$(insertJobNum)" || continue
-                sourcesMenu__repoSync "$jobs";;
+            2*) sourcesMenu__repoSync;;
+            3*) sourcesMenu__repoSyncLocalManifest;;
             *) printf "Undefined source menu action: %s\n" "$action" >&2
                 exit 1
         esac
@@ -144,10 +145,13 @@ function sourcesMenu__repoInit() {
     fi
 }
 
-function sourcesMenu__repoSync(){
-    local jobs="${1?}"
+function sourcesMenu__repoSync() {
+    local jobs
+    if ! jobs="$(insertJobNum)"; then
+        return 0
+    fi
 
-    if containerQuery 'repo-sync' "$jobs"; then
+    if containerQuery 'repo-sync' "$jobs" "$@"; then
         whiptail \
             --backtitle "$__MENU_BACKTITLE__" \
             --title 'Success' \
@@ -156,6 +160,70 @@ function sourcesMenu__repoSync(){
     else
         showLogs
     fi
+}
+
+function sourcesMenu__repoSyncLocalManifest() {
+    printf "Generating project list...\n"
+
+    local repo_list_raw
+    if ! repo_list_raw="$(containerQuery 'repo-local-list')"; then
+        printf -- "%s\n" "$repo_list_raw" >&2
+        showLogs
+        return 0
+    fi
+
+    declare -a repo_list=()
+    local path
+    while IFS=$'\n\r' read -r path; do
+        if [ -z "$path" ]; then
+            continue
+        fi
+
+        repo_list+=("$path" '' 'OFF')
+    done <<< "$repo_list_raw"
+
+    if [ ${#repo_list[@]} -eq 0 ]; then
+        local msg
+        msg="$(cat << EOL
+No projects found in your local_manifests/ or a
+full sync was never executed.
+EOL
+        )"
+        whiptail \
+            --backtitle "$__MENU_BACKTITLE__" \
+            --title 'Error' \
+            --msgbox "$msg" \
+            0 0
+
+        return 0
+    fi
+
+    local choices
+    if ! choices="$(whiptail \
+        --backtitle "$__MENU_BACKTITLE__" \
+        --title 'Project list' \
+        --checklist \
+        --separate-output \
+        'Select projects to sync' 0 0 0 \
+        "${repo_list[@]}" \
+        3>&1 1>&2 2>&3)"; then
+        return 0
+    fi
+
+    declare -a repo_list_choices=()
+    while read -r path; do
+        if [ -z "$path" ]; then
+            continue
+        fi
+
+        repo_list_choices+=("$path")
+    done <<< "$choices"
+
+    if [ ${#repo_list_choices[@]} -eq 0 ]; then
+        return 0
+    fi
+
+    sourcesMenu__repoSync "${repo_list_choices[@]}"
 }
 
 function buildMenu() {
