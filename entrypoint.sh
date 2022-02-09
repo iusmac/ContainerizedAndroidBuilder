@@ -41,13 +41,19 @@ function main() {
                 build_metalava "$jobs" || exit 1
             fi
 
-            if [ "$query" = 'bulid-rom' ]; then
-                log 'Building ROM...'
-                mka bacon -j"$jobs"
+            local task
+            if [ "$query" = 'build-rom' ]; then
+                log 'Start building ROM...'
+                task='bacon'
+            elif [ "$query" = 'build-kernel' ]; then
+                log 'Start building Kernel...'
+                task='bootimage'
             else
-                log 'Building Kernel...'
-                mka bootimage -j"$jobs"
+                printf "This message should never be displayed!\n" >&2
+                exit 1
             fi
+
+            mka $task -j"$jobs"
             ;;
         *) printf "Unrecognized query command: %s\n" "$query"
             exit 1
