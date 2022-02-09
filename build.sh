@@ -84,9 +84,10 @@ function main() {
             --menu 'Select an action' 0 0 0 \
             '1) Sources' 'Manage android source code' \
             '2) Build' 'Start/stop or resume a build' \
-            '3) Progress' 'Show current build state' \
-            '4) Logs' 'Show previous build logs' \
-            '5) Suspend/Hibernate' 'Suspend or hibernate this machine' \
+            '3) Stop tasks' 'Stop gracefully running tasks' \
+            '4) Progress' 'Show current build state' \
+            '5) Logs' 'Show previous build logs' \
+            '6) Suspend/Hibernate' 'Suspend or hibernate this machine' \
             3>&1 1>&2 2>&3)"; then
             return 0
         fi
@@ -94,9 +95,10 @@ function main() {
         case "$action" in
             1*) sourcesMenu;;
             2*) buildMenu;;
-            3*) progressMenu;;
-            4*) logsMenu;;
-            5*) suspendMenu;;
+            3*) stopMenu;;
+            4*) progressMenu;;
+            5*) logsMenu;;
+            6*) suspendMenu;;
             *) printf "Unrecognized main menu action: %s\n" "$action" >&2
                 exit 1
         esac
@@ -165,13 +167,7 @@ function buildMenu() {
             --menu 'Select an action' 0 0 0 \
             '1) Build ROM' 'Start/resume a ROM build' \
             '2) Build Kernel' 'Start/resume a Kernel build only' \
-            '3) Build Stop' 'Stop gracefully the current build' \
             3>&1 1>&2 2>&3)"; then
-            return 0
-        fi
-
-        if [[ "$action" =~ ^3 ]]; then
-            build__stop
             return 0
         fi
 
@@ -215,10 +211,16 @@ EOL
     done
 }
 
-function build__stop() {
+function stopMenu() {
+    local msg
+    msg="$(cat << EOL
+Are you sure you want to stop whatever is running in container
+(ROM/Kernel building or source tree syncing)?
+EOL
+)"
     if ! whiptail \
-        --title 'Build stop' \
-        --yesno "Are you sure you want to stop the build?" \
+        --title 'Graceful stop' \
+        --yesno "$msg" \
         --defaultno \
         0 0 \
         3>&1 1>&2 2>&3; then
@@ -229,7 +231,7 @@ function build__stop() {
         whiptail \
             --backtitle "$__MENU_BACKTITLE__" \
             --title 'Error' \
-            --msgbox "The build is not running on container: $__CONTAINER_NAME__" \
+            --msgbox "No tasks are currently running." \
             0 0
 
         return 0
@@ -238,12 +240,12 @@ function build__stop() {
     coproc { sudo docker container stop "$__CONTAINER_NAME__"; }
     local pid="$COPROC_PID"
 
-    printf "Trying to stop the build gracefully...\n"
+    printf "Attempt to gracefully stop all tasks...\n"
     if wait "$pid"; then
         whiptail \
             --backtitle "$__MENU_BACKTITLE__" \
             --title 'Success' \
-            --msgbox "The build was successfully stopped." \
+            --msgbox "All tasks were successfully stopped." \
             0 0
     else
         showLogs
