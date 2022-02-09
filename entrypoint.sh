@@ -8,20 +8,24 @@ function main() {
             local repo_revision="${2?}"
 
             log "Initializing repo '$repo_url' on revision '$repo_revision'..."
-            yes | repo init --depth=1 -g default,-mips,-darwin -u "$repo_url" -b "$repo_revision"
+            yes | repo init \
+                --depth=1 \
+                --groups=default,-mips,-darwin \
+                --manifest-url="$repo_url" \
+                --manifest-branch="$repo_revision"
             ;;
         'repo-sync')
             local jobs="${1?}"
 
             log "Syncing sources ($jobs jobs)..."
-            repo sync -c \
+            repo sync \
+                --current-branch \
                 --fail-fast \
                 --force-sync \
                 --no-clone-bundle \
                 --no-tags \
                 --optimized-fetch \
-                --prune \
-                -j"$jobs"
+                --jobs="$jobs"
             ;;
         'build-rom'|'build-kernel')
             local lunch_system="${1?}" \
@@ -31,7 +35,7 @@ function main() {
                 jobs="${5?}"
 
             if [ "${USE_CCACHE:-0}" = '1' ]; then
-                ccache -M "$CCACHE_SIZE" || exit $?
+                ccache --max-size "$CCACHE_SIZE" || exit $?
             fi
 
             log 'Running envsetup.sh...'
