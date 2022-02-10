@@ -322,14 +322,14 @@ EOL
 }
 
 function suspendMenu() {
-    local choice
-    if ! choice="$(whiptail \
+    local action
+    if ! action="$(whiptail \
         --backtitle "$__MENU_BACKTITLE__" \
         --title 'Suspend/Hibernate' \
-        --radiolist 'Select power-off type' 0 0 0 \
+        --menu 'Select power-off type' 0 0 0 \
         --cancel-button 'Return' \
-        '1) Suspend' 'Save the session to RAM and put the PC in low power consumption mode' ON \
-        '2) Hibernate' 'Save the session to disk and completely power off the PC' OFF \
+        '1) Suspend' 'Save the session to RAM and put the PC in low power consumption mode' \
+        '2) Hibernate' 'Save the session to disk and completely power off the PC' \
         3>&1 1>&2 2>&3
     )"; then
         return 0
@@ -344,7 +344,7 @@ function suspendMenu() {
         return 0
     fi
 
-    case "$choice" in
+    case "$action" in
         1*) systemctl suspend;;
         2*) systemctl hibernate;;
         *) printf "Undefined suspend menu action: %s\n" "$action" >&2
