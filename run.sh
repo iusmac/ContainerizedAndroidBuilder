@@ -375,6 +375,9 @@ function logsMenu() {
 function containerQuery() {
     # Build image if does not exist
     if ! sudo docker inspect --type image "$__IMAGE_TAG__" &> /dev/null; then
+        printf "Note: Unable to find '%s' image. Start building...\n" "$__IMAGE_TAG__"
+        printf "This may take a while...\n\n"
+
         sudo DOCKER_BUILDKIT=1 docker build \
             --no-cache \
             --build-arg USER="${__USER_IDS__['name']}" \
