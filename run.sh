@@ -116,7 +116,7 @@ function sourcesMenu() {
             --menu 'Select an action' 0 0 0 \
             '1) Init' 'Set repo URL to an android project' \
             '2) Sync All' 'Sync all sources' \
-            '3) Sync "local_manifests" projects' 'Selectively sync projects in "local_manifests"' \
+            '3) Selective Sync' 'Selectively sync projects in "local_manifests/"' \
             3>&1 1>&2 2>&3)"; then
             return 0
         fi
