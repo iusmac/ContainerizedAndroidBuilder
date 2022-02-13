@@ -204,7 +204,7 @@ EOL
         --title 'Project list' \
         --checklist \
         --separate-output \
-        'Select projects to sync' 0 0 0 \
+        "Select projects to sync\nHint: use space bar to select" 0 0 0 \
         "${repo_list[@]}" \
         3>&1 1>&2 2>&3)"; then
         return 0
