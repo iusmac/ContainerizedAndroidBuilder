@@ -35,7 +35,7 @@ function main() {
                 if grep \
                     --recursive \
                     --quiet \
-                    "<project.*$path" .repo/local_manifests/; then
+                    "<project.*path=\"$path\"" .repo/local_manifests/; then
                     printf -- "%s\n" "$path"
                 fi
             done
