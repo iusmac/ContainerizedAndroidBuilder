@@ -3,9 +3,10 @@
 set -o errexit -o pipefail
 
 readonly __VERSION__='1.0'
+readonly __IMAGE_VERSION__='1.0'
 __DIR__="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 readonly __DIR__
-readonly __IMAGE_TAG__="iusmac/containerized_android_builder:v$__VERSION__"
+readonly __IMAGE_TAG__="iusmac/containerized_android_builder:v$__IMAGE_VERSION__"
 readonly __CONTAINER_NAME__='containerized_android_builder'
 readonly __MENU_BACKTITLE__="Android OS Builder v$__VERSION__ | (c) 2022 iusmac"
 declare -rA __USER_IDS__=(
