@@ -121,11 +121,13 @@ function sourcesMenu() {
             return 0
         fi
 
-        rsync --archive \
-            --delete \
-            --include '*.xml' \
-            --exclude '*' \
-            local_manifests/ "${__ARGS__['src-dir']}"/.repo/local_manifests/
+        if [ -d local_manifests ]; then
+            rsync --archive \
+                --delete \
+                --include '*.xml' \
+                --exclude '*' \
+                local_manifests/ "${__ARGS__['src-dir']}"/.repo/local_manifests/
+        fi
 
         case "$action" in
             1*) sourcesMenu__repoInit;;
