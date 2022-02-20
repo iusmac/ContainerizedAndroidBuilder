@@ -392,6 +392,8 @@ function containerQuery() {
     local home="/home/${__USER_IDS__['name']}"
     local query="${1?}"; shift
     local entrypoint="$home"/entrypoint.sh
+    local use_ccache=${__ARGS__['ccache-disabled']}
+    use_ccache=$((use_ccache ^= 1))
     sudo docker run \
         --tty \
         --rm \
@@ -399,7 +401,7 @@ function containerQuery() {
         --tmpfs /tmp:rw,exec,nosuid,nodev,uid="${__USER_IDS__['uid']}",gid="${__USER_IDS__['gid']}" \
         --privileged \
         --env TZ="${__ARGS__['timezone']}" \
-        --env USE_CCACHE="$((__ARGS__['ccache-disabled'] ^= 1))" \
+        --env USE_CCACHE="$use_ccache" \
         --env CCACHE_SIZE="${__ARGS__['ccache-size']}" \
         --volume /etc/timezone:/etc/timezone:ro \
         --volume /etc/localtime:/etc/localtime:ro \
