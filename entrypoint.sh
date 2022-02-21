@@ -98,7 +98,17 @@ function build_metalava() {
 }
 
 function log() {
-    printf ">>[%s] %s\n" "$(date)" "${1?}" | tee -a "$LOGS_DIR/progress.log"
+    local log_file="$LOGS_DIR/progress.log"
+    local date; date="$(date)"
+    printf ">>[%s] %s\n" "$date" "${1?}" | tee -a "$log_file"
+
+    if [ $# -gt 1 ]; then
+        shift
+        local n_spaces="$((${#date} + 5))"
+        for line in "$@"; do
+            printf "%${n_spaces}s%s\n" '' "$line" | tee -a "$log_file"
+        done
+    fi
 }
 
 main "$@"
