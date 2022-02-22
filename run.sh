@@ -230,7 +230,7 @@ EOL
 }
 
 function buildMenu() {
-    local action build_metalava=false metalava_msg jobs query
+    local action jobs query
     while true; do
         if ! action="$(whiptail \
             --backtitle "$__MENU_BACKTITLE__" \
@@ -241,24 +241,6 @@ function buildMenu() {
             '2) Build Kernel' 'Start/resume a Kernel build only' \
             3>&1 1>&2 2>&3)"; then
             return 0
-        fi
-
-        metalava_msg="$(cat << EOL
-Do you want to (re)build metalava doc packages before actually
-initializing the build?
-
-NOTE: building metalava doc packages separately allows to avoid
-      huge compile times.
-      Keep in mind, that you will need to rebuild metalava every
-      time you make significant changes to the Android source code,
-      ex. after 'repo sync'.
-EOL
-    )"
-        if whiptail \
-            --title 'Build metalava doc packages' \
-            --yesno "$metalava_msg" \
-            --defaultno 0 0 3>&1 1>&2 2>&3; then
-            build_metalava=true
         fi
 
         if ! jobs="$(insertJobNum)"; then
@@ -276,7 +258,6 @@ EOL
             "${__ARGS__['lunch-system']}" \
             "${__ARGS__['lunch-device']}" \
             "${__ARGS__['lunch-flavor']}" \
-            $build_metalava \
             "$jobs"
 
         exit $?

@@ -52,8 +52,7 @@ function main() {
             local lunch_system="${1?}" \
                 lunch_device="${2?}" \
                 lunch_flavor="${3?}" \
-                build_metalava="${4?}" \
-                jobs="${5?}"
+                jobs="${4?}"
 
             log 'Initializing build...' \
                 "- Lunch system: $lunch_system" \
@@ -73,10 +72,6 @@ function main() {
 
             log "Running lunch..."
             lunch "${lunch_system}_${lunch_device}-${lunch_flavor}" || exit $?
-
-            if [ "$build_metalava" = 'true' ]; then
-                build_metalava "$jobs" || exit 1
-            fi
 
             local task
             if [ "$query" = 'build-rom' ]; then
@@ -101,25 +96,6 @@ function main() {
         *) printf "Unrecognized query command: %s\n" "$query"
             exit 1
     esac
-}
-
-function build_metalava() {
-    declare -a docs=(
-        'api-stubs-docs'
-        'module-lib-api-stubs-docs'
-        'system-api-stubs-docs'
-        'test-api-stubs-docs'
-    )
-
-    local doc i=0 jobs="${1?}" n_docs=${#docs[@]}
-
-    log "Start building metalava docs ($jobs jobs)..."
-    for doc in "${docs[@]}"; do
-        i=$((i + 1))
-        log "Building metalava doc [$i/$n_docs]: $doc"
-        mka "$doc" -j"$jobs" || exit $?
-    done
-    log "Building metalava docs done."
 }
 
 function log() {
