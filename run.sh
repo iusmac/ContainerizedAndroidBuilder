@@ -2,8 +2,8 @@
 
 set -o errexit -o pipefail
 
-readonly __VERSION__='2.0'
-readonly __IMAGE_VERSION__='1.0'
+readonly __VERSION__='2.0 (A12)'
+readonly __IMAGE_VERSION__='1.0_A12'
 __DIR__="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 readonly __DIR__
 readonly __IMAGE_TAG__="iusmac/containerized_android_builder:v$__IMAGE_VERSION__"
