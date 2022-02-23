@@ -2,8 +2,8 @@
 
 set -o errexit -o pipefail
 
-readonly __VERSION__='2.0 (A12)'
-readonly __IMAGE_VERSION__='1.0_A12'
+readonly __VERSION__='3.0 (A12)'
+readonly __IMAGE_VERSION__='2.0_A12'
 __DIR__="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 readonly __DIR__
 readonly __CONTAINER_NAME__='containerized_android_builder'
