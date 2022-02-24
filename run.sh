@@ -358,6 +358,22 @@ function logsMenu() {
 }
 
 function containerQuery() {
+    if assertIsRunningContainer; then
+        local msg
+        msg="$(cat << EOL
+There are already running tasks. Stop them and retry.
+
+Hint: navigate to Main menu -> Stop tasks
+EOL
+        )"
+        whiptail \
+            --backtitle "$__MENU_BACKTITLE__" \
+            --title 'Error' \
+            --msgbox "$msg" 0 0
+
+        return 0
+    fi
+
     # Build image if does not exist
     if ! sudo docker inspect --type image "$__IMAGE_TAG__" &> /dev/null; then
         local id tag
