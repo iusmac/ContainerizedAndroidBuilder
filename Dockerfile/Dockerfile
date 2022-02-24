@@ -8,11 +8,11 @@ ARG GID
 # Environment variables
 #---------------------#
 ENV DEBIAN_FRONTEND noninteractive
-ENV SRC_DIR /home/$USER/src
-ENV OUT_DIR /home/$USER/src/out
-ENV CCACHE_DIR /home/$USER/ccache
+ENV SRC_DIR /mnt/src
+ENV OUT_DIR /mnt/src/out
+ENV CCACHE_DIR /mnt/ccache
 ENV CCACHE_EXEC /usr/bin/ccache
-ENV LOGS_DIR /home/$USER/logs
+ENV LOGS_DIR /mnt/logs
 
 # Create host user
 #----------------#
@@ -37,8 +37,8 @@ RUN mkdir -p $SRC_DIR/ $OUT_DIR/ $CCACHE_DIR/ $LOGS_DIR/
 
 # Install build dependencies
 #--------------------------#
-RUN apt-get -qq update
-RUN apt-get -qqy upgrade
+RUN apt-get update
+RUN apt-get -y upgrade
 
 RUN apt-get install -y --no-install-recommends \
         bc bison build-essential ccache curl flex openssl ca-certificates \
@@ -55,14 +55,17 @@ RUN ln -s /usr/bin/python3 /usr/bin/python
 
 # Download latest repo
 #--------------------#
-ENV PATH /home/$USER/bin:$PATH
-RUN mkdir -p /home/$USER/bin/
-ADD https://storage.googleapis.com/git-repo-downloads/repo /home/$USER/bin/repo
-RUN chmod +x /home/$USER/bin/repo
+ADD https://storage.googleapis.com/git-repo-downloads/repo /usr/local/bin/repo
+RUN chmod a+rx /usr/local/bin/repo
 
 # Run everything as non-root
 #--------------------------#
-RUN chown --changes --silent --recursive $USER:$USER /home/$USER/
+RUN find /home/$USER/ /mnt -exec chown \
+        --silent \
+        --recursive \
+        $USER:$USER \
+        {} \+
+
 USER $USER
 
 # Set-up configs
