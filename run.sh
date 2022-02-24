@@ -37,7 +37,7 @@ function main() {
         exit 1
     fi
 
-    mkdir -p logs/ \
+    mkdir -p logs/ .home/ \
         "${__ARGS__['src-dir']}"/.repo/local_manifests/ \
         "${__ARGS__['out-dir']}" \
         "${__ARGS__['ccache-dir']}"
@@ -377,6 +377,8 @@ function logsMenu() {
 }
 
 function containerQuery() {
+    local home="/home/${__USER_IDS__['name']}"
+
     if assertIsRunningContainer; then
         local msg
         msg="$(cat << EOL
@@ -398,7 +400,7 @@ EOL
         local id tag
         while IFS='=' read -r id tag; do
             if [ -n "$id" ] && [ -n "$tag" ] && [ "$tag" != $__IMAGE_VERSION__ ]; then
-                printf "Removing unused image with tag: %s\n" "$tag"
+                printf "Removing unused image with tag: %s\n" "$tag" >&2
                 sudo docker rmi "$id"
             fi
         done < <(sudo docker images --format '{{.ID}}={{.Tag}}' $__REPOSITORY__)
@@ -411,11 +413,34 @@ EOL
             --build-arg EMAIL="${__ARGS__['email']}" \
             --build-arg UID="${__USER_IDS__['uid']}" \
             --build-arg GID="${__USER_IDS__['gid']}" \
-            --tag "$__IMAGE_TAG__" "$__DIR__"/Dockerfile/ || exit $?
+            --tag "$__IMAGE_TAG__" "$__DIR__"/Dockerfile/ &&
+
+        printf "We're almost there...\n" >&2
+        sudo docker run \
+            --interactive \
+            --rm \
+            --name "$__CONTAINER_NAME__" \
+            --detach=true \
+            "$__IMAGE_TAG__" >&2 &&
+
+        sudo docker container cp \
+            --archive \
+            "$__CONTAINER_NAME__":"$home"/. .home &&
+
+        # TODO: this is a workaround because '--archive' argument for 'docker
+        # container cp' command is broken. Check from time to time if it has
+        # been fixed.
+        sudo find .home -exec chown \
+            --silent \
+            --recursive \
+            "${__USER_IDS__['uid']}":"${__USER_IDS__['gid']}" \
+            {} \+
+
+        printf "Finishing...\n" >&2
+        sudo docker container stop "$__CONTAINER_NAME__" >/dev/null || exit $?
     fi
 
     local query="${1?}"; shift
-    local home="/home/${__USER_IDS__['name']}"
     local entrypoint=/mnt/entrypoint.sh
     local use_ccache=${__ARGS__['ccache-disabled']}
     use_ccache=$((use_ccache ^= 1))
@@ -435,6 +460,7 @@ EOL
         --volume "${__ARGS__['ccache-dir']}":/mnt/ccache \
         --volume "${__ARGS__['src-dir']}":/mnt/src \
         --volume "$PWD"/logs:/mnt/logs \
+        --volume "$PWD"/.home:"$home" \
         "$__IMAGE_TAG__" \
         "$entrypoint" "$query" "$@"
 }
