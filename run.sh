@@ -398,9 +398,9 @@ function containerQuery() {
             --tag "$__IMAGE_TAG__" "$__DIR__"/Dockerfile/ || exit $?
     fi
 
-    local home="/home/${__USER_IDS__['name']}"
     local query="${1?}"; shift
-    local entrypoint="$home"/entrypoint.sh
+    local home="/home/${__USER_IDS__['name']}"
+    local entrypoint=/mnt/entrypoint.sh
     local use_ccache=${__ARGS__['ccache-disabled']}
     use_ccache=$((use_ccache ^= 1))
     sudo docker run \
@@ -415,10 +415,10 @@ function containerQuery() {
         --volume /etc/timezone:/etc/timezone:ro \
         --volume /etc/localtime:/etc/localtime:ro \
         --volume "$__DIR__"/entrypoint.sh:"$entrypoint" \
-        --volume "${__ARGS__['out-dir']}":"$home"/src/out \
-        --volume "${__ARGS__['ccache-dir']}":"$home"/ccache \
-        --volume "${__ARGS__['src-dir']}":"$home"/src \
-        --volume "$PWD"/logs:"$home"/logs \
+        --volume "${__ARGS__['out-dir']}":/mnt/src/out \
+        --volume "${__ARGS__['ccache-dir']}":/mnt/ccache \
+        --volume "${__ARGS__['src-dir']}":/mnt/src \
+        --volume "$PWD"/logs:/mnt/logs \
         "$__IMAGE_TAG__" \
         "$entrypoint" "$query" "$@"
 }
