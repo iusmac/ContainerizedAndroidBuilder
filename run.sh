@@ -6,8 +6,9 @@ readonly __VERSION__='1.0'
 readonly __IMAGE_VERSION__='1.0'
 __DIR__="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 readonly __DIR__
-readonly __IMAGE_TAG__="iusmac/containerized_android_builder:v$__IMAGE_VERSION__"
 readonly __CONTAINER_NAME__='containerized_android_builder'
+readonly __REPOSITORY__="iusmac/$__CONTAINER_NAME__"
+readonly __IMAGE_TAG__="$__REPOSITORY__:v$__IMAGE_VERSION__"
 readonly __MENU_BACKTITLE__="Android OS Builder v$__VERSION__ | (c) 2022 iusmac"
 declare -rA __USER_IDS__=(
     ['name']="$USER"
@@ -378,9 +379,16 @@ function logsMenu() {
 function containerQuery() {
     # Build image if does not exist
     if ! sudo docker inspect --type image "$__IMAGE_TAG__" &> /dev/null; then
+        local id tag
+        while IFS='=' read -r id tag; do
+            if [ -n "$id" ] && [ -n "$tag" ] && [ "$tag" != $__IMAGE_VERSION__ ]; then
+                printf "Removing unused image with tag: %s\n" "$tag"
+                sudo docker rmi "$id"
+            fi
+        done < <(sudo docker images --format '{{.ID}}={{.Tag}}' $__REPOSITORY__)
+
         printf "Note: Unable to find '%s' image. Start building...\n" "$__IMAGE_TAG__" >&2
         printf "This may take a while...\n\n" >&2
-
         sudo DOCKER_BUILDKIT=1 docker build \
             --no-cache \
             --build-arg USER="${__USER_IDS__['name']}" \
