@@ -126,6 +126,7 @@ function sourcesMenu() {
         if [ -d local_manifests ]; then
             rsync --archive \
                 --delete \
+                --include '*/' \
                 --include '*.xml' \
                 --exclude '*' \
                 local_manifests/ "${__ARGS__['src-dir']}"/.repo/local_manifests/
