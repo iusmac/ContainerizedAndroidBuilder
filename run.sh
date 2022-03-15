@@ -3,10 +3,10 @@
 set -o errexit -o pipefail
 
 readonly __VERSION__='2.2 (A11)'
-readonly __IMAGE_VERSION__='2.0_A11'
+readonly __IMAGE_VERSION__='2.0'
 __DIR__="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 readonly __DIR__
-readonly __CONTAINER_NAME__='containerized_android_builder'
+readonly __CONTAINER_NAME__='containerized_android_builder_a11'
 readonly __REPOSITORY__="iusmac/$__CONTAINER_NAME__"
 readonly __IMAGE_TAG__="$__REPOSITORY__:v$__IMAGE_VERSION__"
 readonly __MENU_BACKTITLE__="Android OS Builder v$__VERSION__ | (c) 2022 iusmac"
