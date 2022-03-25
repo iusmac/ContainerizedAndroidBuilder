@@ -98,7 +98,7 @@ function main() {
                 exit 1
             fi
 
-            mka $task -j"$jobs"; local code=$?
+            m $task -j"$jobs"; local code=$?
             if [ $code -eq 0 ]; then
                 log 'Building done.'
             else
@@ -125,7 +125,7 @@ function build_metalava() {
     for doc in "${docs[@]}"; do
         i=$((i + 1))
         log "Building metalava doc [$i/$n_docs]: $doc"
-        mka "$doc" -j"$jobs" || exit $?
+        m "$doc" -j"$jobs" || exit $?
     done
     log "Building metalava docs done."
 }
