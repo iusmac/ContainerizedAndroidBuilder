@@ -93,7 +93,7 @@ function main() {
                 exit 1
             fi
 
-            mka $task -j"$jobs"; local code=$?
+            m $task -j"$jobs"; local code=$?
             if [ $code -eq 0 ]; then
                 log 'Building done.'
             else
