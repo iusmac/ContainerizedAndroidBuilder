@@ -64,7 +64,8 @@ function main() {
                 "- Container timezone: $TZ" \
 
             if [ "${USE_CCACHE:-0}" = '1' ]; then
-                ccache --max-size "$CCACHE_SIZE" || exit $?
+                ccache --max-size "$CCACHE_SIZE" &&
+                ccache --set-config compression=true || exit $?
             fi
 
             # Forcefully point to out/ dir because we're mounting this
