@@ -13,6 +13,7 @@ ENV OUT_DIR /mnt/src/out
 ENV CCACHE_DIR /mnt/ccache
 ENV CCACHE_EXEC /usr/bin/ccache
 ENV LOGS_DIR /mnt/logs
+ENV ZIP_DIR /mnt/zips
 
 # Create host user
 #----------------#
@@ -30,10 +31,11 @@ VOLUME $SRC_DIR
 VOLUME $OUT_DIR
 VOLUME $CCACHE_DIR
 VOLUME $LOGS_DIR
+VOLUME $ZIP_DIR
 
 # Create volum directories
 #------------------------#
-RUN mkdir -p $SRC_DIR/ $OUT_DIR/ $CCACHE_DIR/ $LOGS_DIR/
+RUN mkdir -p $SRC_DIR/ $OUT_DIR/ $CCACHE_DIR/ $LOGS_DIR/ $ZIP_DIR/
 
 # Install build dependencies
 #--------------------------#

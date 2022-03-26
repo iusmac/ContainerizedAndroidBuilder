@@ -103,6 +103,25 @@ function main() {
 
             m $task -j"$jobs"; local code=$?
             if [ $code -eq 0 ]; then
+                if [ "${MOVE_ZIPS:-0}" = '1' ]; then
+                    local file_pattern
+                    if [ "$query" = 'build-rom' ]; then
+                        log 'Moving ZIPs to zips/ directory...'
+                        file_pattern="*-*-$lunch_device-*.zip*"
+                    elif [ "$query" = 'build-kernel' ]; then
+                        log 'Moving boot.img to zips/ directory...'
+                        file_pattern='boot.img'
+                    fi
+
+                    if [ -n "$file_pattern" ]; then
+                        find "out/target/product/$lunch_device" \
+                            -maxdepth 1 \
+                            -type f \
+                            -name "$file_pattern" \
+                            -exec mv --target-directory="$ZIP_DIR" {} + || exit $?
+                    fi
+                fi
+
                 log 'Building done.'
             else
                 log 'Building failed.'

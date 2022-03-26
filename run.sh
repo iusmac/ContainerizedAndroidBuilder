@@ -24,6 +24,8 @@ declare -A __ARGS__=(
     ['lunch-flavor']=''
     ['src-dir']="$PWD"/src
     ['out-dir']="$PWD"/src/out
+    ['zips-dir']="$PWD"/zips
+    ['move-zips']=0
     ['ccache-dir']="$PWD"/ccache
     ['ccache-disabled']=0
     ['ccache-size']='30GB'
@@ -40,6 +42,7 @@ function main() {
     mkdir -p logs/ .home/ \
         "${__ARGS__['src-dir']}"/.repo/local_manifests/ \
         "${__ARGS__['out-dir']}" \
+        "${__ARGS__['zips-dir']}" \
         "${__ARGS__['ccache-dir']}"
 
     local param value
@@ -438,6 +441,7 @@ function containerQuery() {
         --privileged \
         --env TZ="${__ARGS__['timezone']}" \
         --env USE_CCACHE="$use_ccache" \
+        --env MOVE_ZIPS="${__ARGS__['move-zips']}" \
         --env CCACHE_SIZE="${__ARGS__['ccache-size']}" \
         --volume /etc/timezone:/etc/timezone:ro \
         --volume /etc/localtime:/etc/localtime:ro \
@@ -445,6 +449,7 @@ function containerQuery() {
         --volume "${__ARGS__['out-dir']}":/mnt/src/out \
         --volume "${__ARGS__['ccache-dir']}":/mnt/ccache \
         --volume "${__ARGS__['src-dir']}":/mnt/src \
+        --volume "${__ARGS__['zips-dir']}":/mnt/zips \
         --volume "$PWD"/logs:/mnt/logs \
         --volume "$PWD"/.home:"$home" \
         "$__IMAGE_TAG__" \
