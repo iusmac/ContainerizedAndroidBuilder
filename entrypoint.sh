@@ -48,7 +48,7 @@ function main() {
                 fi
             done
             ;;
-        'build-rom'|'build-kernel')
+        'build-rom'|'build-kernel'|'build-selinux')
             local lunch_system="${1?}" \
                 lunch_device="${2?}" \
                 lunch_flavor="${3?}" \
@@ -93,6 +93,9 @@ function main() {
             elif [ "$query" = 'build-kernel' ]; then
                 log "Start building Kernel ($jobs jobs)..."
                 task='bootimage'
+            elif [ "$query" = 'build-selinux' ]; then
+                log "Start building SELinux Policy ($jobs jobs)..."
+                task='selinux_policy'
             else
                 printf "This message should never be displayed!\n" >&2
                 exit 1

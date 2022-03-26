@@ -241,6 +241,7 @@ function buildMenu() {
             --menu 'Select an action' 0 0 0 \
             '1) Build ROM' 'Start/resume a ROM build' \
             '2) Build Kernel' 'Start/resume a Kernel build only' \
+            '3) Build SELinux Policy' 'Start/resume SELinux Policy build only' \
             3>&1 1>&2 2>&3)"; then
             return 0
         fi
@@ -270,6 +271,7 @@ EOL
         case "$action" in
             1*) query='build-rom';;
             2*) query='build-kernel';;
+            3*) query='build-selinux';;
             *) printf "Undefined build menu action: %s\n" "$action" >&2
                 exit 1
         esac
@@ -289,7 +291,7 @@ function stopMenu() {
     local msg
     msg="$(cat << EOL
 Are you sure you want to stop whatever is running in container
-(ROM/Kernel building or source tree syncing)?
+(ROM/Kernel/SELinux building or source tree syncing)?
 EOL
 )"
     if ! whiptail \
