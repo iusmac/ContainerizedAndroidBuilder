@@ -94,6 +94,7 @@ function main() {
             '4) Progress' 'Show current build state' \
             '5) Logs' 'Show previous build logs' \
             '6) Suspend/Hibernate' 'Suspend or hibernate this machine' \
+            '7) Self-update' 'Get the latest version' \
             3>&1 1>&2 2>&3)"; then
             return 0
         fi
@@ -105,6 +106,7 @@ function main() {
             4*) progressMenu;;
             5*) logsMenu;;
             6*) suspendMenu;;
+            7*) selfUpdateMenu;;
             *) printf "Unrecognized main menu action: %s\n" "$action" >&2
                 exit 1
         esac
@@ -380,6 +382,20 @@ function logsMenu() {
     fi
 
     gzip --stdout --decompress "$log_file" | less -R
+}
+
+function selfUpdateMenu() {
+    if [ ! -d .git ]; then
+        printf "Cannot find '.git' directory. Please, follow the installation\n" >&2
+        printf "guide and make sure the directory structure complies with\n" >&2
+        printf "the requirements.\n" >&2
+        exit 1
+    fi
+
+    git pull --recurse-submodules --force --rebase || exit $?
+
+    printf "You've successfully upgraded. Run the builder again when you wish it ;)\n"
+    exit 0
 }
 
 function containerQuery() {
