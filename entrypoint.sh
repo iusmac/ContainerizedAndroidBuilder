@@ -135,10 +135,9 @@ function main() {
 
 function build_metalava() {
     declare -a docs=(
-        'api-stubs-docs'
-        'module-lib-api-stubs-docs'
-        'system-api-stubs-docs'
-        'test-api-stubs-docs'
+        'test-api-stubs-docs-non-updatable'
+        'api-stubs-docs-non-updatable'
+        'services-non-updatable-stubs'
     )
 
     local doc i=0 jobs="${1?}" n_docs=${#docs[@]}
@@ -147,7 +146,7 @@ function build_metalava() {
     for doc in "${docs[@]}"; do
         i=$((i + 1))
         log "Building metalava doc [$i/$n_docs]: $doc"
-        mka "$doc" -j"$jobs" || exit $?
+        m "$doc" -j"$jobs" || exit $?
     done
     log "Building metalava docs done."
 }
