@@ -58,7 +58,7 @@ RUN ln -s /usr/bin/python3 /usr/bin/python
 # Download latest repo
 #--------------------#
 ADD https://storage.googleapis.com/git-repo-downloads/repo /usr/local/bin/repo
-RUN chmod a+rx /usr/local/bin/repo
+RUN chmod a+rwx /usr/local/bin/repo
 
 # Run everything as non-root
 #--------------------------#
