@@ -124,6 +124,7 @@ function sourcesMenu() {
             '1) Init' 'Set repo URL to an android project' \
             '2) Sync All' 'Sync all sources' \
             '3) Selective Sync' 'Selectively sync projects in "local_manifests/"' \
+            '4) Selective Sync (cached)' 'Same as option n.3 but reuses a cached repo list' \
             3>&1 1>&2 2>&3)"; then
             return 0
         fi
@@ -141,6 +142,8 @@ function sourcesMenu() {
             1*) sourcesMenu__repoInit;;
             2*) sourcesMenu__repoSync;;
             3*) sourcesMenu__repoSyncLocalManifest;;
+            4*) sourcesMenu__repoSyncLocalManifest \
+                "$(cat .home/.repo-list.raw 2>/dev/null)";;
             *) printf "Undefined source menu action: %s\n" "$action" >&2
                 exit 1
         esac
@@ -173,13 +176,15 @@ function sourcesMenu__repoSync() {
 }
 
 function sourcesMenu__repoSyncLocalManifest() {
-    printf "Generating project list...\n"
-
-    local repo_list_raw
-    if ! repo_list_raw="$(containerQuery 'repo-local-list')"; then
-        printf -- "%s\n" "$repo_list_raw" >&2
-        showLogs
-        return 0
+    local repo_list_raw="${1:-}"
+    if [ -z "$repo_list_raw" ]; then
+        printf "Generating project list...\n"
+        if ! repo_list_raw="$(containerQuery 'repo-local-list')"; then
+            printf -- "%s\n" "$repo_list_raw" >&2
+            showLogs
+            return 0
+        fi
+        echo "$repo_list_raw" > .home/.repo-list.raw
     fi
 
     declare -a repo_list=()
