@@ -9,7 +9,7 @@ ARG GID
 #---------------------#
 ENV DEBIAN_FRONTEND noninteractive
 ENV SRC_DIR /mnt/src
-ENV OUT_DIR /mnt/src/out
+ENV OUT_DIR /mnt/out
 ENV CCACHE_DIR /mnt/ccache
 ENV CCACHE_EXEC /usr/bin/ccache
 ENV LOGS_DIR /mnt/logs

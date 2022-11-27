@@ -68,13 +68,6 @@ function main() {
                 ccache --set-config compression=true || exit $?
             fi
 
-            # Forcefully point to out/ dir because we're mounting this
-            # directory from the outside and somehow it changes to an absolute
-            # path. This will force Soong to look for things in out/ dir using
-            # the absolute path and fail if we will change the mount point for
-            # some reason.
-            export OUT_DIR=out
-
             log 'Running envsetup.sh...'
             # shellcheck disable=SC1091
             source build/envsetup.sh || exit $?
@@ -114,7 +107,7 @@ function main() {
                     fi
 
                     if [ -n "$file_pattern" ]; then
-                        find "out/target/product/$lunch_device" \
+                        find "$OUT_DIR/target/product/$lunch_device" \
                             -maxdepth 1 \
                             -type f \
                             -name "$file_pattern" \

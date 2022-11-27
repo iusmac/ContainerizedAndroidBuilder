@@ -23,7 +23,7 @@ declare -A __ARGS__=(
     ['lunch-device']=''
     ['lunch-flavor']=''
     ['src-dir']="$PWD"/src
-    ['out-dir']="$PWD"/src/out
+    ['out-dir']="$PWD"/out
     ['zips-dir']="$PWD"/zips
     ['move-zips']=0
     ['ccache-dir']="$PWD"/ccache
@@ -467,7 +467,7 @@ function containerQuery() {
         --volume /etc/timezone:/etc/timezone:ro \
         --volume /etc/localtime:/etc/localtime:ro \
         --volume "$__DIR__"/entrypoint.sh:"$entrypoint" \
-        --volume "${__ARGS__['out-dir']}":/mnt/src/out \
+        --volume "${__ARGS__['out-dir']}":/mnt/out \
         --volume "${__ARGS__['ccache-dir']}":/mnt/ccache \
         --volume "${__ARGS__['src-dir']}":/mnt/src \
         --volume "${__ARGS__['zips-dir']}":/mnt/zips \
