@@ -127,12 +127,23 @@ function main() {
 }
 
 function build_metalava() {
-    declare -a docs=(
-        'api-stubs-docs'
-        'module-lib-api-stubs-docs'
-        'system-api-stubs-docs'
-        'test-api-stubs-docs'
-    )
+    case "$ANDROID_VERSION" in
+        12.*|13.0)
+            declare -a docs=(
+                'test-api-stubs-docs-non-updatable'
+                'api-stubs-docs-non-updatable'
+                'services-non-updatable-stubs'
+            ) ;;
+        11.0)
+            declare -a docs=(
+                'api-stubs-docs'
+                'module-lib-api-stubs-docs'
+                'system-api-stubs-docs'
+                'test-api-stubs-docs'
+            ) ;;
+        *) printf "Metalava: Unsupported Android version: %s\n" "$ANDROID_VERSION"
+            exit 1
+    esac
 
     local doc i=0 jobs="${1?}" n_docs=${#docs[@]}
 
