@@ -16,6 +16,7 @@ declare -rA __USER_IDS__=(
     ['gid']="$(id --group "$USER")"
 )
 declare -A __ARGS__=(
+    ['android']=''
     ['email']=''
     ['repo-url']=''
     ['repo-revision']=''
@@ -69,7 +70,9 @@ function main() {
         __ARGS__['timezone']="$timezone"
     fi
 
-    for arg in 'email' \
+    for arg in \
+        'android' \
+        'email' \
         'repo-url' \
         'repo-revision' \
         'lunch-system' \
@@ -460,6 +463,7 @@ function containerQuery() {
         --name "$__CONTAINER_NAME__" \
         --tmpfs /tmp:rw,exec,nosuid,nodev,uid="${__USER_IDS__['uid']}",gid="${__USER_IDS__['gid']}" \
         --privileged \
+        --env ANDROID_VERSION="${__ARGS__['android']}" \
         --env TZ="${__ARGS__['timezone']}" \
         --env USE_CCACHE="$use_ccache" \
         --env MOVE_ZIPS="${__ARGS__['move-zips']}" \
