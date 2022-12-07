@@ -94,10 +94,11 @@ function main() {
             '1) Sources' 'Manage android source code' \
             '2) Build' 'Start/stop or resume a build' \
             '3) Stop tasks' 'Stop gracefully running tasks' \
-            '4) Progress' 'Show current build state' \
-            '5) Logs' 'Show previous build logs' \
-            '6) Suspend/Hibernate' 'Suspend or hibernate this machine' \
-            '7) Self-update' 'Get the latest version' \
+            '4) Jump inside' 'Get into the Docker container shell' \
+            '5) Progress' 'Show current build state' \
+            '6) Logs' 'Show previous build logs' \
+            '7) Suspend/Hibernate' 'Suspend or hibernate this machine' \
+            '8) Self-update' 'Get the latest version' \
             3>&1 1>&2 2>&3)"; then
             return 0
         fi
@@ -106,10 +107,11 @@ function main() {
             1*) sourcesMenu;;
             2*) buildMenu;;
             3*) stopMenu;;
-            4*) progressMenu;;
-            5*) logsMenu;;
-            6*) suspendMenu;;
-            7*) selfUpdateMenu;;
+            4*) runInContainer /bin/bash;;
+            5*) progressMenu;;
+            6*) logsMenu;;
+            7*) suspendMenu;;
+            8*) selfUpdateMenu;;
             *) printf "Unrecognized main menu action: %s\n" "$action" >&2
                 exit 1
         esac
@@ -407,8 +409,12 @@ function selfUpdateMenu() {
 }
 
 function containerQuery() {
+    local query="${1?}"; shift
+    runInContainer /mnt/entrypoint.sh "$query" "$@"
+}
+
+function buildImageIfNone() {
     local home="/home/${__USER_IDS__['name']}"
-    # Build image if does not exist
     if ! sudo docker inspect --type image "$__IMAGE_TAG__" &> /dev/null; then
         local id tag
         while IFS='=' read -r id tag; do
@@ -452,33 +458,51 @@ function containerQuery() {
         printf "Finishing...\n" >&2
         sudo docker container stop "$__CONTAINER_NAME__" >/dev/null || exit $?
     fi
+}
 
-    local query="${1?}"; shift
-    local entrypoint=/mnt/entrypoint.sh
+function runInContainer() {
+    local home="/home/${__USER_IDS__['name']}"
+    local entrypoint='/mnt/entrypoint.sh'
     local use_ccache=${__ARGS__['ccache-disabled']}
     use_ccache=$((use_ccache ^= 1))
-    sudo docker run \
+
+    buildImageIfNone
+
+    if ! assertIsRunningContainer; then
+        sudo docker run \
+            --detach \
+            --interactive \
+            --rm \
+            --name "$__CONTAINER_NAME__" \
+            --tmpfs /tmp:rw,exec,nosuid,nodev,uid="${__USER_IDS__['uid']}",gid="${__USER_IDS__['gid']}" \
+            --privileged \
+            --env ANDROID_VERSION="${__ARGS__['android']}" \
+            --env TZ="${__ARGS__['timezone']}" \
+            --env USE_CCACHE="$use_ccache" \
+            --env MOVE_ZIPS="${__ARGS__['move-zips']}" \
+            --env CCACHE_SIZE="${__ARGS__['ccache-size']}" \
+            --volume /etc/timezone:/etc/timezone:ro \
+            --volume /etc/localtime:/etc/localtime:ro \
+            --volume "$__DIR__"/entrypoint.sh:"$entrypoint" \
+            --volume "${__ARGS__['out-dir']}":/mnt/out \
+            --volume "${__ARGS__['ccache-dir']}":/mnt/ccache \
+            --volume "${__ARGS__['src-dir']}":/mnt/src \
+            --volume "${__ARGS__['zips-dir']}":/mnt/zips \
+            --volume "$PWD"/logs:/mnt/logs \
+            --volume "$PWD"/.home:"$home" \
+            "$__IMAGE_TAG__" >&2 || exit $?
+    fi
+
+    sudo docker container exec \
+        --interactive \
         --tty \
-        --rm \
-        --name "$__CONTAINER_NAME__" \
-        --tmpfs /tmp:rw,exec,nosuid,nodev,uid="${__USER_IDS__['uid']}",gid="${__USER_IDS__['gid']}" \
         --privileged \
         --env ANDROID_VERSION="${__ARGS__['android']}" \
         --env TZ="${__ARGS__['timezone']}" \
         --env USE_CCACHE="$use_ccache" \
         --env MOVE_ZIPS="${__ARGS__['move-zips']}" \
         --env CCACHE_SIZE="${__ARGS__['ccache-size']}" \
-        --volume /etc/timezone:/etc/timezone:ro \
-        --volume /etc/localtime:/etc/localtime:ro \
-        --volume "$__DIR__"/entrypoint.sh:"$entrypoint" \
-        --volume "${__ARGS__['out-dir']}":/mnt/out \
-        --volume "${__ARGS__['ccache-dir']}":/mnt/ccache \
-        --volume "${__ARGS__['src-dir']}":/mnt/src \
-        --volume "${__ARGS__['zips-dir']}":/mnt/zips \
-        --volume "$PWD"/logs:/mnt/logs \
-        --volume "$PWD"/.home:"$home" \
-        "$__IMAGE_TAG__" \
-        "$entrypoint" "$query" "$@"
+        $__CONTAINER_NAME__ "$@" || exit $?
 }
 
 function insertJobNum() {
