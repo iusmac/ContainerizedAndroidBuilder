@@ -99,6 +99,7 @@ function main() {
             '6) Logs' 'Show previous build logs' \
             '7) Suspend/Hibernate' 'Suspend or hibernate this machine' \
             '8) Self-update' 'Get the latest version' \
+            '9) Self-destroy' 'Stop all tasks and remove Docker image' \
             3>&1 1>&2 2>&3)"; then
             return 0
         fi
@@ -112,6 +113,7 @@ function main() {
             6*) logsMenu;;
             7*) suspendMenu;;
             8*) selfUpdateMenu;;
+            9*) selfDestroyMenu;;
             *) printf "Unrecognized main menu action: %s\n" "$action" >&2
                 exit 1
         esac
@@ -408,6 +410,44 @@ function selfUpdateMenu() {
     exit 0
 }
 
+function selfDestroyMenu() {
+    local msg; msg="$(cat << EOL
+Are you sure you want to kill all running tasks and remove Docker image from disk?
+
+NOTE: this won't remove sources or out files. You have to remove
+      them manually.
+EOL
+    )"
+    if ! whiptail \
+        --title 'Self-destroy' \
+        --yesno "$msg" \
+        --defaultno \
+        0 0 \
+        3>&1 1>&2 2>&3; then
+        return 0
+    fi
+
+    if assertIsRunningContainer; then
+        printf "Found a running container, stopping...\n" >&2
+        sudo docker container stop $__CONTAINER_NAME__ || exit $?
+    fi
+
+    local img_list id tag
+    printf "Retrieving image list...\n" >&2
+    img_list="$(getImageList)"
+
+    while IFS='=' read -r id tag; do
+        if [ -n "$id" ] && [ -n "$tag" ]; then
+            printf "Removing image with tag: %s\n" "$tag" >&2
+            sudo docker rmi "$id"
+        fi
+    done <<< "$img_list"
+
+    if [ -z "$img_list" ]; then
+        printf "No images to remove.\n" >&2
+    fi
+}
+
 function containerQuery() {
     local query="${1?}"; shift
     runInContainer /mnt/entrypoint.sh "$query" "$@"
@@ -422,7 +462,7 @@ function buildImageIfNone() {
                 printf "Removing unused image with tag: %s\n" "$tag" >&2
                 sudo docker rmi "$id"
             fi
-        done < <(sudo docker images --format '{{.ID}}={{.Tag}}' $__REPOSITORY__)
+        done <<< "$(getImageList)"
 
         printf "Note: Unable to find '%s' image. Start building...\n" "$__IMAGE_TAG__" >&2
         printf "This may take a while...\n\n" >&2
@@ -503,6 +543,10 @@ function runInContainer() {
         --env MOVE_ZIPS="${__ARGS__['move-zips']}" \
         --env CCACHE_SIZE="${__ARGS__['ccache-size']}" \
         $__CONTAINER_NAME__ "$@" || exit $?
+}
+
+function getImageList() {
+    sudo docker images --format '{{.ID}}={{.Tag}}' $__REPOSITORY__
 }
 
 function insertJobNum() {
