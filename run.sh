@@ -17,7 +17,7 @@ declare -rA __USER_IDS__=(
 )
 declare -A __ARGS__=(
     ['android']=''
-    ['email']=''
+    ['email']='docker@localhost'
     ['repo-url']=''
     ['repo-revision']=''
     ['lunch-system']=''
@@ -72,7 +72,6 @@ function main() {
 
     for arg in \
         'android' \
-        'email' \
         'repo-url' \
         'repo-revision' \
         'lunch-system' \
