@@ -9,7 +9,7 @@ readonly __DIR__
 readonly __CONTAINER_NAME__='containerized_android_builder'
 readonly __REPOSITORY__="iusmac/$__CONTAINER_NAME__"
 readonly __IMAGE_TAG__="$__REPOSITORY__:v$__IMAGE_VERSION__"
-readonly __MENU_BACKTITLE__="Android OS Builder v$__VERSION__ | (c) 2022 iusmac"
+readonly __MENU_BACKTITLE__="ContainerizedAndroidBuilder v$__VERSION__ (using Docker image v$__IMAGE_VERSION__) | (c) 2022 iusmac"
 declare -rA __USER_IDS__=(
     ['name']="$USER"
     ['uid']="$(id --user "$USER")"
