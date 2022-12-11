@@ -50,6 +50,12 @@ function main() {
     while [ $# -gt 0 ]; do
         param="${1:2}"; value="$2"
 
+        if [ "$param" = 'version' ]; then
+            printf -- "ContainerizedAndroidBuilder v%s (using Docker image v%s)\n" \
+                "$__VERSION__" "$__IMAGE_VERSION__"
+            exit 0
+        fi
+
         if [ "$param" = 'ccache-disabled' ]; then
             __ARGS__['ccache-disabled']=1
             shift
