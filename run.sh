@@ -477,9 +477,11 @@ function buildImageIfNone() {
             --build-arg EMAIL="${__ARGS__['email']}" \
             --build-arg UID="${__USER_IDS__['uid']}" \
             --build-arg GID="${__USER_IDS__['gid']}" \
-            --tag "$__IMAGE_TAG__" "$__DIR__"/Dockerfile/ &&
+            --tag "$__IMAGE_TAG__" "$__DIR__"/Dockerfile/ || exit $?
+    fi
 
-        printf "We're almost there...\n" >&2
+    if [ ! -d .home ]; then
+        printf "Extracting .home directory...\n" >&2
         sudo docker run \
             --interactive \
             --rm \
