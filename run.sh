@@ -56,6 +56,11 @@ function main() {
             exit 0
         fi
 
+        if [ "$param" = 'help' ]; then
+            printHelp
+            exit 0
+        fi
+
         if [ "$param" = 'ccache-disabled' ]; then
             __ARGS__['ccache-disabled']=1
             shift
@@ -590,6 +595,29 @@ function clearLine() {
 function showLogs() {
     read -n1 -rsp 'Press any key to return...'
     clearLine
+}
+
+function printHelp() {
+    printf -- "%s\n" "$(cat << EOL
+Usage: ./${BASH_SOURCE[0]}
+    --android ANDROID
+    --repo-url REPO_URL
+    --repo-revision REPO_REVISION
+    --lunch-system LUNCH_SYSTEM
+    --lunch-device LUNCH_DEVICE
+    --lunch-flavor LUNCH_FLAVOR
+    [--email EMAIL]
+    [--src-dir SRC_DIR]
+    [--out-dir OUT_DIR]
+    [--zips-dir ZIPS_DIR]
+    [--move-zips MOVE_ZIPS]
+    [--ccache-dir CCACHE_DIR]
+    [--ccache-disabled]
+    [--ccache-size CCACHE_SIZE]
+    [--timezone TIMEZONE]
+    [--help] [--version]
+EOL
+    )"
 }
 
 function trapCallback() {
