@@ -460,7 +460,7 @@ EOL
 
 function containerQuery() {
     local query="${1?}"; shift
-    runInContainer /mnt/entrypoint.sh "$query" "$@"
+    runInContainer /mnt/entrypoint/entrypoint.sh "$query" "$@"
 }
 
 function buildImageIfNone() {
@@ -514,7 +514,6 @@ function buildImageIfNone() {
 
 function runInContainer() {
     local home="/home/${__USER_IDS__['name']}"
-    local entrypoint='/mnt/entrypoint.sh'
     local use_ccache=${__ARGS__['ccache-disabled']}
     use_ccache=$((use_ccache ^= 1))
 
@@ -535,7 +534,7 @@ function runInContainer() {
             --env CCACHE_SIZE="${__ARGS__['ccache-size']}" \
             --volume /etc/timezone:/etc/timezone:ro \
             --volume /etc/localtime:/etc/localtime:ro \
-            --volume "$__DIR__"/entrypoint.sh:"$entrypoint" \
+            --volume "$__DIR__"/entrypoint:/mnt/entrypoint \
             --volume "${__ARGS__['out-dir']}":/mnt/out \
             --volume "${__ARGS__['ccache-dir']}":/mnt/ccache \
             --volume "${__ARGS__['src-dir']}":/mnt/src \
