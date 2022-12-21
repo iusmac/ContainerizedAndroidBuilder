@@ -1,12 +1,12 @@
 FROM debian:bullseye
 
-ARG USER
 ARG EMAIL
 ARG UID
 ARG GID
 
 # Environment variables
 #---------------------#
+ENV USER android
 ENV DEBIAN_FRONTEND noninteractive
 ENV SRC_DIR /mnt/src
 ENV OUT_DIR /mnt/out

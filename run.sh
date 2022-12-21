@@ -11,7 +11,6 @@ readonly __REPOSITORY__="iusmac/$__CONTAINER_NAME__"
 readonly __IMAGE_TAG__="$__REPOSITORY__:v$__IMAGE_VERSION__"
 readonly __MENU_BACKTITLE__="ContainerizedAndroidBuilder v$__VERSION__ (using Docker image v$__IMAGE_VERSION__) | (c) 2022 iusmac"
 declare -rA __USER_IDS__=(
-    ['name']="$USER"
     ['uid']="$(id --user "$USER")"
     ['gid']="$(id --group "$USER")"
 )
@@ -469,7 +468,7 @@ function containerQuery() {
 }
 
 function buildImageIfNone() {
-    local home="/home/${__USER_IDS__['name']}"
+    local home="/home/android"
     if ! sudo docker inspect --type image "$__IMAGE_TAG__" &> /dev/null; then
         local id tag
         while IFS='=' read -r id tag; do
@@ -483,7 +482,6 @@ function buildImageIfNone() {
         printf "This may take a while...\n\n" >&2
         sudo DOCKER_BUILDKIT=1 docker build \
             --no-cache \
-            --build-arg USER="${__USER_IDS__['name']}" \
             --build-arg EMAIL="${__ARGS__['email']}" \
             --build-arg UID="${__USER_IDS__['uid']}" \
             --build-arg GID="${__USER_IDS__['gid']}" \
@@ -518,7 +516,7 @@ function buildImageIfNone() {
 }
 
 function runInContainer() {
-    local home="/home/${__USER_IDS__['name']}"
+    local home="/home/android"
     local use_ccache=${__ARGS__['ccache-disabled']}
     use_ccache=$((use_ccache ^= 1))
 
