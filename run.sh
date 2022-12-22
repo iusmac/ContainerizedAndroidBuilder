@@ -490,6 +490,8 @@ function buildImageIfNone() {
             --tag "$__IMAGE_TAG__" "$__DIR__"/Dockerfile/ || exit $?
     fi
 
+    copyFilesToHost
+
     if [ ! -d .home ]; then
         printf "Extracting .home directory...\n" >&2
         sudo docker run \
@@ -513,6 +515,60 @@ function buildImageIfNone() {
             {} \+
 
         printf "Finishing...\n" >&2
+        sudo docker container stop "$__CONTAINER_NAME__" >/dev/null || exit $?
+    fi
+}
+
+function copyFilesToHost() {
+    # Example: ['SRC_PATH/.'='DEST_PATH']
+    # NB.: if DEST_PATH is a directory and
+    # ├── SRC_PATH does not end with /. (that is: slash followed by dot)
+    # │   └── the source directory is copied into this directory
+    # │ 
+    # └── SRC_PATH does end with /. (that is: slash followed by dot)
+    #     └── the content of the source directory is copied into this directory
+    declare -A flist=(
+    )
+
+    local source_ target running=0
+    for source_ in "${!flist[@]}"; do
+        target="${flist["$source_"]}"
+
+        if [ -e "$target" ]; then
+            continue
+        fi
+
+        printf "Copying missing target to host: %s\n" "$target" >&2
+        if [ $running -eq 0 ]; then
+            if assertIsRunningContainer; then
+                printf "Found a running container, stopping...\n" >&2
+                sudo docker container stop "$__CONTAINER_NAME__" >/dev/null || exit $?
+            fi
+            sudo docker run \
+                --interactive \
+                --rm \
+                --name "$__CONTAINER_NAME__" \
+                --detach=true \
+                "$__IMAGE_TAG__" >&2 || exit $?
+            running=1
+        fi
+
+        sudo docker container cp \
+            --archive \
+            "$__CONTAINER_NAME__":"$source_" "$target" || exit $?
+    done
+
+    if [ $running -eq 1 ]; then
+        printf "Finishing...\n" >&2
+        # TODO: this is a workaround because '--archive' argument for 'docker
+        # container cp' command is broken. Check from time to time if it has
+        # been fixed.
+        sudo chown \
+            --silent \
+            --recursive \
+            "${__USER_IDS__['uid']}":"${__USER_IDS__['gid']}" \
+            "${flist[@]}" &&
+
         sudo docker container stop "$__CONTAINER_NAME__" >/dev/null || exit $?
     fi
 }
