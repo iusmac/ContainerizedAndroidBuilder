@@ -11,6 +11,7 @@ readonly __REPOSITORY__="iusmac/$__CONTAINER_NAME__"
 readonly __IMAGE_TAG__="$__REPOSITORY__:v$__IMAGE_VERSION__"
 readonly __MENU_BACKTITLE__="ContainerizedAndroidBuilder v$__VERSION__ (using Docker image v$__IMAGE_VERSION__) | (c) 2022 iusmac"
 readonly __CACHE_DIR__='cache'
+readonly __MISC_DIR__='misc'
 declare -rA __USER_IDS__=(
     ['uid']="$(id --user "$USER")"
     ['gid']="$(id --group "$USER")"
@@ -40,7 +41,7 @@ function main() {
         exit 1
     fi
 
-    mkdir -p logs/ "$__CACHE_DIR__"/ .home/ \
+    mkdir -p logs/ "$__CACHE_DIR__"/ "$__MISC_DIR__"/ .home/ \
         "${__ARGS__['src-dir']}"/.repo/local_manifests/ \
         "${__ARGS__['out-dir']}" \
         "${__ARGS__['zips-dir']}" \
@@ -545,6 +546,7 @@ function runInContainer() {
             --volume "${__ARGS__['zips-dir']}":/mnt/zips \
             --volume "$PWD"/logs:/mnt/logs \
             --volume "$PWD"/.home:"$home" \
+            --volume "$PWD/$__MISC_DIR__":/mnt/misc \
             "$__IMAGE_TAG__" >&2 || exit $?
     fi
 
