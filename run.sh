@@ -470,7 +470,6 @@ function containerQuery() {
 }
 
 function buildImageIfNone() {
-    local home="/home/android"
     if ! sudo docker inspect --type image "$__IMAGE_TAG__" &> /dev/null; then
         local id tag
         while IFS='=' read -r id tag; do
@@ -491,32 +490,6 @@ function buildImageIfNone() {
     fi
 
     copyFilesToHost
-
-    if [ ! -d .home ]; then
-        printf "Extracting .home directory...\n" >&2
-        sudo docker run \
-            --interactive \
-            --rm \
-            --name "$__CONTAINER_NAME__" \
-            --detach=true \
-            "$__IMAGE_TAG__" >&2 &&
-
-        sudo docker container cp \
-            --archive \
-            "$__CONTAINER_NAME__":"$home"/. .home &&
-
-        # TODO: this is a workaround because '--archive' argument for 'docker
-        # container cp' command is broken. Check from time to time if it has
-        # been fixed.
-        sudo find .home -exec chown \
-            --silent \
-            --recursive \
-            "${__USER_IDS__['uid']}":"${__USER_IDS__['gid']}" \
-            {} \+
-
-        printf "Finishing...\n" >&2
-        sudo docker container stop "$__CONTAINER_NAME__" >/dev/null || exit $?
-    fi
 }
 
 function copyFilesToHost() {
@@ -528,6 +501,7 @@ function copyFilesToHost() {
     # └── SRC_PATH does end with /. (that is: slash followed by dot)
     #     └── the content of the source directory is copied into this directory
     declare -A flist=(
+        ['/home/android/.']='.home'
     )
 
     local source_ target running=0
