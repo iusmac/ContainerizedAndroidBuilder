@@ -502,6 +502,8 @@ function copyFilesToHost() {
     #     └── the content of the source directory is copied into this directory
     declare -A flist=(
         ['/home/android/.']='.home'
+        ['/etc/passwd']="$__CACHE_DIR__/passwd.orig"
+        ['/etc/group']="$__CACHE_DIR__/group.orig"
     )
 
     local source_ target running=0
@@ -547,12 +549,32 @@ function copyFilesToHost() {
     fi
 }
 
+function setUpUser() {
+    local uid="${1?}" gid="${2?}" home="${3?}"
+    {
+        # NOTE: keep user on top to ensure it's picked up regardless of
+        # duplicates
+        printf "android:x:%d:%d::%s:/bin/bash\n" "$uid" "$gid" "$home"
+        cat "$__CACHE_DIR__"/passwd.orig
+    } > "$__CACHE_DIR__"/passwd || exit $?
+
+    {
+        # NOTE: keep group on top to ensure it's picked up regardless of
+        # duplicates
+        printf "android:x:%d\n" "$gid"
+        cat "$__CACHE_DIR__"/group.orig
+    } > "$__CACHE_DIR__"/group || exit $?
+}
+
 function runInContainer() {
-    local home="/home/android"
-    local use_ccache=${__ARGS__['ccache-disabled']}
+    local uid="${__USER_IDS__['uid']}" \
+        gid="${__USER_IDS__['gid']}" \
+        home='/home/android' \
+        use_ccache=${__ARGS__['ccache-disabled']}
     use_ccache=$((use_ccache ^= 1))
 
     buildImageIfNone
+    setUpUser "$uid" "$gid" "$home"
 
     if ! assertIsRunningContainer; then
         sudo docker run \
@@ -560,13 +582,16 @@ function runInContainer() {
             --interactive \
             --rm \
             --name "$__CONTAINER_NAME__" \
-            --tmpfs /tmp:rw,exec,nosuid,nodev,uid="${__USER_IDS__['uid']}",gid="${__USER_IDS__['gid']}" \
+            --tmpfs /tmp:rw,exec,nosuid,nodev,uid="$uid",gid="$gid" \
             --privileged \
+            --user "$uid":"$gid" \
             --env ANDROID_VERSION="${__ARGS__['android']}" \
             --env TZ="${__ARGS__['timezone']}" \
             --env USE_CCACHE="$use_ccache" \
             --env MOVE_ZIPS="${__ARGS__['move-zips']}" \
             --env CCACHE_SIZE="${__ARGS__['ccache-size']}" \
+            --volume "$PWD/$__CACHE_DIR__"/passwd:/etc/passwd:ro \
+            --volume "$PWD/$__CACHE_DIR__"/group:/etc/group:ro \
             --volume /etc/timezone:/etc/timezone:ro \
             --volume /etc/localtime:/etc/localtime:ro \
             --volume "$__DIR__"/entrypoint:/mnt/entrypoint \
