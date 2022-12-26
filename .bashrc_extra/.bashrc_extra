@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+alias envsetup='source $SRC_DIR/build/envsetup.sh'
+
 ################### User's .bash_profile ####################
 #                      !!! WARNING !!!                      #
 #          DO NOT ADD ANYTHING BELOW THIS COMMENT!          #
