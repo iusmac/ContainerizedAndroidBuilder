@@ -12,6 +12,7 @@ readonly __IMAGE_TAG__="$__REPOSITORY__:v$__IMAGE_VERSION__"
 readonly __MENU_BACKTITLE__="ContainerizedAndroidBuilder v$__VERSION__ (using Docker image v$__IMAGE_VERSION__) | (c) 2022 iusmac"
 readonly __CACHE_DIR__='cache'
 readonly __MISC_DIR__='misc'
+readonly __HOME_DIR__="$__CACHE_DIR__/home"
 declare -rA __USER_IDS__=(
     ['uid']="$(id --user "$USER")"
     ['gid']="$(id --group "$USER")"
@@ -41,7 +42,7 @@ function main() {
         exit 1
     fi
 
-    mkdir -p logs/ "$__CACHE_DIR__"/ "$__MISC_DIR__"/ .home/ \
+    mkdir -p logs/ "$__CACHE_DIR__"/ "$__MISC_DIR__"/ \
         "${__ARGS__['src-dir']}"/.repo/local_manifests/ \
         "${__ARGS__['out-dir']}" \
         "${__ARGS__['zips-dir']}" \
@@ -161,7 +162,7 @@ function sourcesMenu() {
             2*) sourcesMenu__repoSync;;
             3*) sourcesMenu__repoSyncLocalManifest;;
             4*) sourcesMenu__repoSyncLocalManifest \
-                "$(cat .home/.repo-list.raw 2>/dev/null)";;
+                "$(cat "$__HOME_DIR__"/.repo-list.raw 2>/dev/null)";;
             *) printf "Undefined source menu action: %s\n" "$action" >&2
                 exit 1
         esac
@@ -202,7 +203,7 @@ function sourcesMenu__repoSyncLocalManifest() {
             showLogs
             return 0
         fi
-        echo "$repo_list_raw" > .home/.repo-list.raw
+        echo "$repo_list_raw" > "$__HOME_DIR__"/.repo-list.raw
     fi
 
     declare -a repo_list=()
@@ -501,7 +502,7 @@ function copyFilesToHost() {
     # └── SRC_PATH does end with /. (that is: slash followed by dot)
     #     └── the content of the source directory is copied into this directory
     declare -A flist=(
-        ['/home/android/.']='.home'
+        ['/home/android/.']="$__HOME_DIR__"
         ['/etc/passwd']="$__CACHE_DIR__/passwd.orig"
         ['/etc/group']="$__CACHE_DIR__/group.orig"
     )
@@ -600,7 +601,7 @@ function runInContainer() {
             --volume "${__ARGS__['src-dir']}":/mnt/src \
             --volume "${__ARGS__['zips-dir']}":/mnt/zips \
             --volume "$PWD"/logs:/mnt/logs \
-            --volume "$PWD"/.home:"$home" \
+            --volume "$PWD/$__HOME_DIR__":"$home" \
             --volume "$PWD/$__MISC_DIR__":/mnt/misc \
             "$__IMAGE_TAG__" >&2 || exit $?
     fi
