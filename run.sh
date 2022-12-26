@@ -577,6 +577,8 @@ function runInContainer() {
     buildImageIfNone
     setUpUser "$uid" "$gid" "$home"
 
+    touch "$__MISC_DIR__"/.bash_profile
+
     if ! assertIsRunningContainer; then
         sudo docker run \
             --detach \

@@ -1,1 +1,9 @@
 #!/usr/bin/env bash
+
+################### User's .bash_profile ####################
+#                      !!! WARNING !!!                      #
+#          DO NOT ADD ANYTHING BELOW THIS COMMENT!          #
+#  ALLOW END USERS TO OVERRIDE ANYTHING DECLARED ABOVE IT!  #
+#############################################################
+# shellcheck disable=SC1091
+source /mnt/misc/.bash_profile
