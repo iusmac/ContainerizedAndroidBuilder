@@ -595,6 +595,7 @@ function runInContainer() {
             --volume "$PWD/$__CACHE_DIR__"/group:/etc/group:ro \
             --volume /etc/timezone:/etc/timezone:ro \
             --volume /etc/localtime:/etc/localtime:ro \
+            --volume "$__DIR__"/.bashrc_extra:/mnt/.bashrc_extra \
             --volume "$__DIR__"/entrypoint:/mnt/entrypoint \
             --volume "${__ARGS__['out-dir']}":/mnt/out \
             --volume "${__ARGS__['ccache-dir']}":/mnt/ccache \

@@ -75,6 +75,7 @@ USER $USER
 #--------------#
 RUN git config --global user.name $USER
 RUN git config --global user.email $EMAIL
+RUN echo 'source /mnt/.bashrc_extra/.bashrc_extra' > /home/$USER/.bash_aliases
 
 # Set work directory
 #------------------#
