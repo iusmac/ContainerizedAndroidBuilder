@@ -1,5 +1,7 @@
 FROM debian:bullseye
 
+LABEL maintainer="iusmac <iusico.maxim@libero.it>"
+
 ARG EMAIL
 ARG UID
 ARG GID
