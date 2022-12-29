@@ -589,6 +589,9 @@ function runInContainer() {
             --privileged \
             --user "$uid":"$gid" \
             --env ANDROID_VERSION="${__ARGS__['android']}" \
+            --env LUNCH_SYSTEM="${__ARGS__['lunch-system']}" \
+            --env LUNCH_DEVICE="${__ARGS__['lunch-device']}" \
+            --env LUNCH_FLAVOR="${__ARGS__['lunch-flavor']}" \
             --env TZ="${__ARGS__['timezone']}" \
             --env USE_CCACHE="$use_ccache" \
             --env MOVE_ZIPS="${__ARGS__['move-zips']}" \

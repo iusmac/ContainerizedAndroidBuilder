@@ -2,6 +2,20 @@
 
 alias envsetup='source $SRC_DIR/build/envsetup.sh'
 
+function lunch_() {
+    if [ $# -gt 0 ]; then
+        lunch "$@"
+        return 0
+    fi
+
+    read -re \
+        -p 'lunch ' \
+        -i "${LUNCH_SYSTEM}_${LUNCH_DEVICE}-${LUNCH_FLAVOR}" \
+        input
+
+    lunch "$input"
+}
+
 ################### User's .bash_profile ####################
 #                      !!! WARNING !!!                      #
 #          DO NOT ADD ANYTHING BELOW THIS COMMENT!          #
