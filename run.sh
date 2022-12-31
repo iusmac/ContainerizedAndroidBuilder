@@ -467,7 +467,7 @@ EOL
 
 function containerQuery() {
     local query="${1?}"; shift
-    runInContainer /mnt/entrypoint/entrypoint.sh "$query" "$@"
+    runInContainer /bin/bash -i +o histexpand /mnt/entrypoint/entrypoint.sh "$query" "$@"
 }
 
 function buildImageIfNone() {
