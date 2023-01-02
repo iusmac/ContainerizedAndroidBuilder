@@ -480,14 +480,19 @@ function buildImageIfNone() {
             fi
         done <<< "$(getImageList)"
 
-        printf "Note: Unable to find '%s' image. Start building...\n" "$__IMAGE_TAG__" >&2
-        printf "This may take a while...\n\n" >&2
-        sudo DOCKER_BUILDKIT=1 docker build \
-            --no-cache \
-            --build-arg EMAIL="${__ARGS__['email']}" \
-            --build-arg UID="${__USER_IDS__['uid']}" \
-            --build-arg GID="${__USER_IDS__['gid']}" \
-            --tag "$__IMAGE_TAG__" "$__DIR__"/Dockerfile/ || exit $?
+        if [ "${DOCKER_BUILD_IMAGE:-0}" = '1' ]; then
+            printf "Note: Unable to find '%s' image. Start building...\n" "$__IMAGE_TAG__" >&2
+            printf "This may take a while...\n\n" >&2
+            sudo DOCKER_BUILDKIT=1 docker build \
+                --no-cache \
+                --build-arg EMAIL="${__ARGS__['email']}" \
+                --build-arg UID="${__USER_IDS__['uid']}" \
+                --build-arg GID="${__USER_IDS__['gid']}" \
+                --tag "$__IMAGE_TAG__" "$__DIR__"/Dockerfile/ || exit $?
+        else
+            printf "Note: Unable to find '%s' image. Pulling from repository...\n" "$__IMAGE_TAG__" >&2
+            sudo docker pull "$__IMAGE_TAG__" || exit $?
+        fi
     fi
 
     copyFilesToHost
