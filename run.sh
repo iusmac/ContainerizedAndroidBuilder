@@ -50,25 +50,32 @@ function main() {
 
     local param value
     while [ $# -gt 0 ]; do
-        param="${1:2}"; value="$2"
+        param="${1:2}"
+        case "$param" in
+            'version')
+                printf -- "ContainerizedAndroidBuilder v%s (using Docker image v%s)\n" \
+                    "$__VERSION__" "$__IMAGE_VERSION__"
+                exit 0
+                ;;
+            'help')
+                printHelp
+                exit 0
+                ;;
+            'ccache-disabled')
+                value=1
+                shift
+                ;;
+            *=*) # equal sign as delim: param=value
+                IFS='=' read -r param value <<< "$param"
+                shift
+                ;;
+            *) # whitespace as delim: param value
+                value="$2"
+                shift 2
+        esac
 
-        if [ "$param" = 'version' ]; then
-            printf -- "ContainerizedAndroidBuilder v%s (using Docker image v%s)\n" \
-                "$__VERSION__" "$__IMAGE_VERSION__"
-            exit 0
-        fi
-
-        if [ "$param" = 'help' ]; then
-            printHelp
-            exit 0
-        fi
-
-        if [ "$param" = 'ccache-disabled' ]; then
-            __ARGS__['ccache-disabled']=1
-            shift
-        elif [ "${__ARGS__["$param"]+xyz}" ]; then
+        if [ "${__ARGS__["$param"]+xyz}" ]; then
             __ARGS__["$param"]="$value"
-            shift 2
         else
             printf -- "Unrecognized argument: --%s\n" "$param" >&2
             exit 1
