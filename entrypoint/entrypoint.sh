@@ -15,7 +15,8 @@ function main() {
                 --depth=1 \
                 --groups=default,-mips,-darwin \
                 --manifest-url="$repo_url" \
-                --manifest-branch="$repo_revision"
+                --manifest-branch="$repo_revision" \
+                --git-lfs
             ;;
         'repo-sync')
             local jobs="${1?}"; shift
