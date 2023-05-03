@@ -142,6 +142,13 @@ function build_metalava() {
                 'system-api-stubs-docs'
                 'test-api-stubs-docs'
             ) ;;
+        10.0)
+            declare -a docs=(
+                'api-stubs-docs'
+                'hiddenapi-lists-docs'
+                'system-api-stubs-docs '
+                'test-api-stubs-docs'
+            ) ;;
         *) printf "Metalava: Unsupported Android version: %s\n" "$ANDROID_VERSION"
             exit 1
     esac
