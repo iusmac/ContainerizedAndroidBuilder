@@ -56,9 +56,21 @@ function main() {
                 build_metalava="${4?}" \
                 jobs="${5?}"
 
+            local lunch_release
+            if isAtLeastU; then
+                local build_id;
+                if ! build_id="$(grep --max-count=1 'BUILD_ID=' build/core/build_id.mk)" ||
+                    ! lunch_release="$(sed -n 's/BUILD_ID=\([^\.]\+\).*/\L\1/p' <<< "$build_id")" ||
+                    [ -z "$lunch_release" ]; then
+                    printf "Failed to parse release branch name for lunch command.\n" >&2
+                    exit 1
+                fi
+            fi
+
             log 'Initializing build...' \
                 "- Lunch system: $lunch_system" \
                 "- Lunch device: $lunch_device" \
+                "- Lunch release: $lunch_release" \
                 "- Lunch flavor: $lunch_flavor" \
                 "- Ccache enabled: $USE_CCACHE" \
                 "- Ccache size: $CCACHE_SIZE" \
@@ -73,8 +85,13 @@ function main() {
             # shellcheck disable=SC1091
             source build/envsetup.sh || exit $?
 
+            local lunch_target="${lunch_system}_${lunch_device}"
+            if [ -n "$lunch_release" ]; then
+                lunch_target+="-$lunch_release"
+            fi
+            lunch_target+="-$lunch_flavor"
             log "Running lunch..."
-            lunch "${lunch_system}_${lunch_device}-${lunch_flavor}" || exit $?
+            lunch "$lunch_target" || exit $?
 
             if [ "$build_metalava" = 'true' ]; then
                 build_metalava "$jobs" || exit 1
@@ -129,7 +146,7 @@ function main() {
 
 function build_metalava() {
     case "$ANDROID_VERSION" in
-        12.*|13.0)
+        12.*|13.0|14.0)
             declare -a docs=(
                 'test-api-stubs-docs-non-updatable'
                 'api-stubs-docs-non-updatable'
@@ -176,6 +193,10 @@ function log() {
             printf "%${n_spaces}s%s\n" '' "$line" | tee -a "$log_file"
         done
     fi
+}
+
+function isAtLeastU() {
+    [[ ${ANDROID_VERSION%%.*} -ge 14 ]]
 }
 
 main "$@"
