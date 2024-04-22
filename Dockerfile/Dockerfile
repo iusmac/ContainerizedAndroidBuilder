@@ -58,6 +58,10 @@ RUN apt-get install -y --no-install-recommends \
 RUN rm -f /usr/bin/python
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
+# Ensure sed tool is under /usr
+#-----------------------------#
+RUN test -f /usr/bin/sed || ln -s /bin/sed /usr/bin/sed
+
 # Download latest repo
 #--------------------#
 ADD https://storage.googleapis.com/git-repo-downloads/repo /usr/local/bin/repo
