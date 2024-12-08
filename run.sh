@@ -609,6 +609,10 @@ function runInContainer() {
             --env USE_CCACHE="$use_ccache" \
             --env MOVE_ZIPS="${__ARGS__['move-zips']}" \
             --env CCACHE_SIZE="${__ARGS__['ccache-size']}" \
+            --env APP_VERSION="$__VERSION__" \
+            --env IMAGE_VERSION="$__IMAGE_VERSION__" \
+            --env REPO_URL="${__ARGS__['repo-url']}" \
+            --env REPO_REVISION="${__ARGS__['repo-revision']}" \
             --volume "$PWD/$__CACHE_DIR__"/passwd:/etc/passwd:ro \
             --volume "$PWD/$__CACHE_DIR__"/group:/etc/group:ro \
             --volume /etc/timezone:/etc/timezone:ro \
