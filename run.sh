@@ -479,6 +479,10 @@ function containerQuery() {
 
 function buildImageIfNone() {
     if ! sudo docker inspect --type image "$__IMAGE_TAG__" &> /dev/null; then
+        if assertIsRunningContainer; then
+            printf "Found a running container, stopping...\n" >&2
+            sudo docker container stop $__CONTAINER_NAME__ || exit $?
+        fi
         local id tag
         while IFS='=' read -r id tag; do
             if [ -n "$id" ] && [ -n "$tag" ] && [ "$tag" != $__IMAGE_VERSION__ ]; then
