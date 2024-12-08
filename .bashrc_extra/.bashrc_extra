@@ -8,6 +8,8 @@ function lunch_() {
         return 0
     fi
 
+    italic 'Modify, if needed, and press enter to continue.'
+    printf "\n\n"
     read -re \
         -p 'lunch ' \
         -i "${LUNCH_SYSTEM}_${LUNCH_DEVICE}-${LUNCH_FLAVOR}" \
