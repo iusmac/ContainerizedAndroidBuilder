@@ -601,18 +601,7 @@ function runInContainer() {
             --tmpfs /tmp:rw,exec,nosuid,nodev,uid="$uid",gid="$gid" \
             --privileged \
             --user "$uid":"$gid" \
-            --env ANDROID_VERSION="${__ARGS__['android']}" \
-            --env LUNCH_SYSTEM="${__ARGS__['lunch-system']}" \
-            --env LUNCH_DEVICE="${__ARGS__['lunch-device']}" \
-            --env LUNCH_FLAVOR="${__ARGS__['lunch-flavor']}" \
-            --env TZ="${__ARGS__['timezone']}" \
-            --env USE_CCACHE="$use_ccache" \
-            --env MOVE_ZIPS="${__ARGS__['move-zips']}" \
-            --env CCACHE_SIZE="${__ARGS__['ccache-size']}" \
-            --env APP_VERSION="$__VERSION__" \
             --env IMAGE_VERSION="$__IMAGE_VERSION__" \
-            --env REPO_URL="${__ARGS__['repo-url']}" \
-            --env REPO_REVISION="${__ARGS__['repo-revision']}" \
             --volume "$PWD/$__CACHE_DIR__"/passwd:/etc/passwd:ro \
             --volume "$PWD/$__CACHE_DIR__"/group:/etc/group:ro \
             --volume /etc/timezone:/etc/timezone:ro \
@@ -634,10 +623,16 @@ function runInContainer() {
         --tty \
         --privileged \
         --env ANDROID_VERSION="${__ARGS__['android']}" \
+        --env LUNCH_SYSTEM="${__ARGS__['lunch-system']}" \
+        --env LUNCH_DEVICE="${__ARGS__['lunch-device']}" \
+        --env LUNCH_FLAVOR="${__ARGS__['lunch-flavor']}" \
         --env TZ="${__ARGS__['timezone']}" \
         --env USE_CCACHE="$use_ccache" \
         --env MOVE_ZIPS="${__ARGS__['move-zips']}" \
         --env CCACHE_SIZE="${__ARGS__['ccache-size']}" \
+        --env APP_VERSION="$__VERSION__" \
+        --env REPO_URL="${__ARGS__['repo-url']}" \
+        --env REPO_REVISION="${__ARGS__['repo-revision']}" \
         $__CONTAINER_NAME__ "$@" || exit $?
 }
 
