@@ -36,6 +36,10 @@ declare -A __ARGS__=(
 )
 
 function main() {
+    if [ $# -eq 0 ]; then
+        printHelp
+        exit 0
+    fi
     if [ "${UID:-}" = '0' ] || [ "${__USER_IDS__['uid']}" = '0' ]; then
         printf "Do not execute this script using sudo.\n" >&2
         printf "You will get sudo prompt in case root privileges are needed.\n" >&2
