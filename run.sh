@@ -349,6 +349,10 @@ EOL
         return 0
     fi
 
+    if [ "$PWD" != "$(getRunningContainerPWD)" ]; then
+        anotherInstanceRunningConfirmDialog || return 0
+    fi
+
     coproc { sudo docker container stop "$__CONTAINER_NAME__"; }
     local pid="$COPROC_PID"
 
@@ -424,7 +428,11 @@ function selfUpdateMenu() {
     fi
 
     if assertIsRunningContainer; then
-        printf "Found a running container, stopping...\n" >&2
+        if [ "$PWD" != "$(getRunningContainerPWD)" ]; then
+            anotherInstanceRunningConfirmDialog || return 0
+        else
+            printf "Found a running container, stopping...\n" >&2
+        fi
         sudo docker container stop $__CONTAINER_NAME__ || exit $?
     fi
 
@@ -452,7 +460,11 @@ EOL
     fi
 
     if assertIsRunningContainer; then
-        printf "Found a running container, stopping...\n" >&2
+        if [ "$PWD" != "$(getRunningContainerPWD)" ]; then
+            anotherInstanceRunningConfirmDialog || return 0
+        else
+            printf "Found a running container, stopping...\n" >&2
+        fi
         sudo docker container stop $__CONTAINER_NAME__ || exit $?
     fi
 
@@ -480,7 +492,11 @@ function containerQuery() {
 function buildImageIfNone() {
     if ! sudo docker inspect --type image "$__IMAGE_TAG__" &> /dev/null; then
         if assertIsRunningContainer; then
-            printf "Found a running container, stopping...\n" >&2
+            if [ "$PWD" != "$(getRunningContainerPWD)" ]; then
+                anotherInstanceRunningConfirmDialog || return 0
+            else
+                printf "Found a running container, stopping...\n" >&2
+            fi
             sudo docker container stop $__CONTAINER_NAME__ || exit $?
         fi
         local id tag
@@ -606,6 +622,10 @@ function runInContainer() {
             --privileged \
             --user "$uid":"$gid" \
             --env IMAGE_VERSION="$__IMAGE_VERSION__" \
+            --label PWD="$PWD" \
+            --label lunch_system="${__ARGS__['lunch-system']}" \
+            --label lunch_device="${__ARGS__['lunch-device']}" \
+            --label lunch_flavor="${__ARGS__['lunch-flavor']}" \
             --volume "$PWD/$__CACHE_DIR__"/passwd:/etc/passwd:ro \
             --volume "$PWD/$__CACHE_DIR__"/group:/etc/group:ro \
             --volume /etc/timezone:/etc/timezone:ro \
@@ -620,6 +640,21 @@ function runInContainer() {
             --volume "$PWD/$__HOME_DIR__":"$home" \
             --volume "$PWD/$__MISC_DIR__":/mnt/misc \
             "$__IMAGE_TAG__" >&2 || exit $?
+    elif [ "$PWD" != "$(getRunningContainerPWD)" ]; then
+        local msg
+        msg="$(cat << EOL
+Another instance of the builder is already running for the project at
+$(getRunningContainerPWD)
+
+Use the "Stop tasks" option in the main menu to stop all running tasks.
+EOL
+        )"
+        whiptail \
+            --backtitle "$__MENU_BACKTITLE__" \
+            --title 'Error' \
+            --msgbox "$msg" \
+            0 0
+        return 0
     fi
 
     sudo docker container exec \
@@ -669,6 +704,27 @@ function assertIsRunningContainer() {
         --quiet)"
 
     test -n "$id"
+}
+
+function getRunningContainerPWD() {
+    sudo docker inspect --format '{{ .Config.Labels.PWD }}' "$__CONTAINER_NAME__"
+}
+
+function anotherInstanceRunningConfirmDialog() {
+    local msg
+    msg="$(cat << EOL
+This operation requires the Docker container to be stopped, but another instance
+of the builder is already running for the project at $(getRunningContainerPWD)
+
+Are you sure you want to continue?
+EOL
+    )"
+    whiptail \
+        --title 'Warning' \
+        --yesno "$msg" \
+        --defaultno \
+        0 0 \
+        3>&1 1>&2 2>&3
 }
 
 function clearLine() {
