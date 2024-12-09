@@ -75,7 +75,7 @@ function main() {
                 ;;
             *) # whitespace as delim: param value
                 value="$2"
-                shift 2
+                shift 2 || true
         esac
 
         if [ "${__ARGS__["$param"]+xyz}" ]; then
