@@ -38,7 +38,7 @@ function toBoolean() {
     [ "${1-}" -eq 1 ] && echo 'true' || echo 'false'
 }
 
-cat <<- EOL
+[ "$SPLASH_SCREEN" = '1' ] && cat <<- EOL
 
 $(bold "*** Welcome to ContainerizedAndroidBuilder ***")
     $(bold '•') Current version: $APP_VERSION

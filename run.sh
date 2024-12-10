@@ -131,7 +131,7 @@ function main() {
             1*) sourcesMenu;;
             2*) buildMenu;;
             3*) stopMenu;;
-            4*) runInContainer /bin/bash;;
+            4*) runInContainer /usr/bin/env SPLASH_SCREEN=1 /bin/bash;;
             5*) progressMenu;;
             6*) logsMenu;;
             7*) suspendMenu;;
