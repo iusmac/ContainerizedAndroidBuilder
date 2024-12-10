@@ -55,8 +55,8 @@ $(bold 'Current build settings')
     $(bold '•') Move to zips directory: $(toBoolean "$MOVE_ZIPS")
 
 $(bold 'Current Android source Repo settings')
-    $(bold '•') URL: $REPO_URL
-    $(bold '•') Revision: $REPO_REVISION
+    $(bold '•') URL: $__REPO_URL__
+    $(bold '•') Revision: $__REPO_REVISION__
 
 $(bold 'Aliases & commands')
 

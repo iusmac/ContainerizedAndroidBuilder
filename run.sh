@@ -674,8 +674,8 @@ EOL
         --env MOVE_ZIPS="${__ARGS__['move-zips']}" \
         --env CCACHE_SIZE="${__ARGS__['ccache-size']}" \
         --env APP_VERSION="$__VERSION__" \
-        --env REPO_URL="${__ARGS__['repo-url']}" \
-        --env REPO_REVISION="${__ARGS__['repo-revision']}" \
+        --env __REPO_URL__="${__ARGS__['repo-url']}" \
+        --env __REPO_REVISION__="${__ARGS__['repo-revision']}" \
         $__CONTAINER_NAME__ "$@" || exit $?
 }
 
