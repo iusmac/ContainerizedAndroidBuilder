@@ -440,7 +440,10 @@ function selfUpdateMenu() {
         sudo docker container stop $__CONTAINER_NAME__ || exit $?
     fi
 
-    git pull --recurse-submodules --force --rebase || exit $?
+    git pull --rebase && (
+        cd "$__DIR__" &&
+        git pull --recurse-submodules --force --rebase origin master
+    ) || exit $?
 
     printf "You've successfully upgraded. Run the builder again when you wish it ;)\n"
     exit 0
