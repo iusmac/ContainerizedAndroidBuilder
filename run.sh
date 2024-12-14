@@ -2,7 +2,7 @@
 
 set -o errexit -o pipefail
 
-readonly __VERSION__='1.0'
+readonly __VERSION__='1.1'
 readonly __IMAGE_VERSION__='1.1'
 __DIR__="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 readonly __DIR__
