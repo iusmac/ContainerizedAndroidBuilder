@@ -1,4 +1,4 @@
-FROM debian:bullseye
+FROM debian:bookworm
 
 LABEL maintainer="iusmac <iusico.maxim@libero.it>"
 
@@ -50,7 +50,7 @@ RUN apt-get install -y --no-install-recommends \
         g++-multilib gcc-multilib git git-lfs gnupg gperf imagemagick \
         lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool \
         libncurses5 libncurses5-dev libsdl1.2-dev libssl-dev ssh \
-        libwxgtk3.0-gtk3-dev libxml2 libxml2-utils lzop pngcrush \
+        libwxgtk3.2-dev libxml2 libxml2-utils lzop pngcrush \
         rsync schedtool squashfs-tools xsltproc zip unzip zlib1g-dev vim
 
 # Force using python3
