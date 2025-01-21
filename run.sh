@@ -52,8 +52,9 @@ function main() {
         "${__ARGS__['zips-dir']}" \
         "${__ARGS__['ccache-dir']}"
 
-    local param value
+    local arg param value
     while [ $# -gt 0 ]; do
+        arg="$1"
         param="${1:2}"
         case "$param" in
             'version')
@@ -78,10 +79,10 @@ function main() {
                 shift 2 || true
         esac
 
-        if [ "${__ARGS__["$param"]+xyz}" ]; then
+        if [ -n "$param" ] && [ "${__ARGS__["$param"]+xyz}" ]; then
             __ARGS__["$param"]="$value"
         else
-            printf -- "Unrecognized argument: --%s\n" "$param" >&2
+            printf -- "Unrecognized argument: %s\n" "$arg" >&2
             exit 1
         fi
     done
