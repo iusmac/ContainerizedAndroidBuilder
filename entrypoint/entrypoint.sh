@@ -146,20 +146,20 @@ function main() {
 
 function build_metalava() {
     case "$ANDROID_VERSION" in
-        12.*|13.0|14.0)
+        12|12.*|13|13.0|14|14.0)
             declare -a docs=(
                 'test-api-stubs-docs-non-updatable'
                 'api-stubs-docs-non-updatable'
                 'services-non-updatable-stubs'
             ) ;;
-        11.0)
+        11|11.0)
             declare -a docs=(
                 'api-stubs-docs'
                 'module-lib-api-stubs-docs'
                 'system-api-stubs-docs'
                 'test-api-stubs-docs'
             ) ;;
-        10.0)
+        10|10.0)
             declare -a docs=(
                 'api-stubs-docs'
                 'hiddenapi-lists-docs'
