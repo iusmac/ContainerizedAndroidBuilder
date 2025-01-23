@@ -501,7 +501,7 @@ function buildImageIfNone() {
     if ! sudo docker inspect --type image "$__IMAGE_TAG__" &> /dev/null; then
         if assertIsRunningContainer; then
             if [ "$PWD" != "$(getRunningContainerPWD)" ]; then
-                anotherInstanceRunningConfirmDialog || return 0
+                anotherInstanceRunningConfirmDialog || return $?
             else
                 printf "Found a running container, stopping...\n" >&2
             fi
@@ -598,14 +598,14 @@ function setUpUser() {
         # duplicates
         printf "android:x:%d:%d::%s:/bin/bash\n" "$uid" "$gid" "$home"
         cat "$__CACHE_DIR__"/passwd.orig
-    } > "$__CACHE_DIR__"/passwd || exit $?
+    } > "$__CACHE_DIR__"/passwd || return $?
 
     {
         # NOTE: keep group on top to ensure it's picked up regardless of
         # duplicates
         printf "android:x:%d\n" "$gid"
         cat "$__CACHE_DIR__"/group.orig
-    } > "$__CACHE_DIR__"/group || exit $?
+    } > "$__CACHE_DIR__"/group || return $?
 }
 
 function runInContainer() {
@@ -615,8 +615,8 @@ function runInContainer() {
         use_ccache=${__ARGS__['ccache-disabled']}
     use_ccache=$((use_ccache ^= 1))
 
-    buildImageIfNone
-    setUpUser "$uid" "$gid" "$home"
+    buildImageIfNone &&
+    setUpUser "$uid" "$gid" "$home" || return $?
 
     touch "$__MISC_DIR__"/.bash_profile
 
