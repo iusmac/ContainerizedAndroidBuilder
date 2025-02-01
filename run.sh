@@ -625,6 +625,7 @@ function runInContainer() {
             --detach \
             --interactive \
             --rm \
+            --network host \
             --name "$__CONTAINER_NAME__" \
             --tmpfs /tmp:rw,exec,nosuid,nodev,uid="$uid",gid="$gid" \
             --privileged \
