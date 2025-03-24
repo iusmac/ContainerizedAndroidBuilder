@@ -20,9 +20,11 @@ function main() {
             ;;
         'repo-sync')
             local jobs="${1?}"; shift
+            local -a extra_args
 
             if [ $# -gt 0 ]; then
                 log "Syncing sources ($jobs jobs):" "$@"
+                extra_args+=('--no-manifest-update')
             else
                 log "Syncing all sources ($jobs jobs)..."
             fi
@@ -34,7 +36,7 @@ function main() {
                 --no-clone-bundle \
                 --no-tags \
                 --optimized-fetch \
-                --jobs="$jobs" -- "$@"
+                --jobs="$jobs" "${extra_args[@]}" -- "$@"
             ;;
         'repo-local-list')
             set -o pipefail
