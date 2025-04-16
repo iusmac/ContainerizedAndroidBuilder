@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -o errexit -o pipefail
-
 readonly __VERSION__='1.3.1'
 readonly __IMAGE_VERSION__='1.2'
 __DIR__="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
@@ -9,7 +7,6 @@ readonly __DIR__
 readonly __CONTAINER_NAME__='containerized_android_builder'
 readonly __REPOSITORY__="iusmac/$__CONTAINER_NAME__"
 readonly __IMAGE_TAG__="$__REPOSITORY__:v$__IMAGE_VERSION__"
-readonly __MENU_BACKTITLE__="ContainerizedAndroidBuilder v$__VERSION__ (using Docker image v$__IMAGE_VERSION__) | (c) 2022 iusmac"
 readonly __CACHE_DIR__='cache'
 readonly __MISC_DIR__='misc'
 readonly __HOME_DIR__="$__CACHE_DIR__/home"
@@ -34,6 +31,12 @@ declare -A __ARGS__=(
     ['ccache-size']='30GB'
     ['timezone']="${TZ:-}"
 )
+
+source "$__DIR__"/boxlib/core.sh
+
+config \
+    headerTitle="ContainerizedAndroidBuilder v$__VERSION__ (using Docker image v$__IMAGE_VERSION__) / (c) 2022 iusmac" \
+    changeToCallbackDir='false'
 
 function main() {
     if [ $# -eq 0 ]; then
@@ -108,388 +111,56 @@ function main() {
         fi
     done
 
-    local action
-    while true; do
-        if ! action="$(whiptail \
-            --backtitle "$__MENU_BACKTITLE__" \
-            --title 'Main menu'  \
-            --cancel-button 'Exit' \
-            --menu 'Select an action' 0 0 0 \
-            '1) Sources' 'Manage android source code' \
-            '2) Build' 'Start/stop or resume a build' \
-            '3) Stop tasks' 'Stop gracefully running tasks' \
-            '4) Jump inside' 'Get into the Docker container shell' \
-            '5) Progress' 'Show current build state' \
-            '6) Logs' 'Show previous build logs' \
-            '7) Suspend/Hibernate' 'Suspend or hibernate this machine' \
-            '8) Self-update' 'Get the latest version' \
-            '9) Self-destroy' 'Stop all tasks and remove Docker image' \
-            3>&1 1>&2 2>&3)"; then
-            return 0
-        fi
+    menu \
+        title='Main menu' \
+        text='Select an action' \
+        cancelLabel='Exit' \
+        abortOnCallbackFailure='true' \
+        prefix='num' \
+        loop='true' \
+        [ title='Sources'            summary='Manage android source code'              callback="$__DIR__/boxes/sources-menu.sh" ] \
+        [ title='Build'              summary='Start/stop or resume a build'            callback="$__DIR__/boxes/build-menu.sh" ] \
+        [ title='Stop tasks'         summary='Stop gracefully running tasks'           callback="$__DIR__/boxes/stop-menu.sh" ] \
+        [ title='Jump inside'        summary='Get into the Docker container shell'     callback='handle_jump_inside()' ] \
+        [ title='Progress'           summary='Show current build state'                callback='show_build_progress()' ] \
+        [ title='Logs'               summary='Show previous build logs'                callback='show_logs()' ] \
+        [ title='Suspend/Hibernate'  summary='Suspend or hibernate this machine'       callback="$__DIR__/boxes/suspend-menu.sh" ] \
+        [ title='Self-update'        summary='Get the latest version'                  callback="$__DIR__/boxes/self-update-menu.sh" ] \
+        [ title='Self-destroy'       summary='Stop all tasks and remove Docker image'  callback="$__DIR__/boxes/self-destroy-menu.sh" ]
 
-        case "$action" in
-            1*) sourcesMenu;;
-            2*) buildMenu;;
-            3*) stopMenu;;
-            4*) runInContainer /usr/bin/env SPLASH_SCREEN=1 /bin/bash;;
-            5*) progressMenu;;
-            6*) logsMenu;;
-            7*) suspendMenu;;
-            8*) selfUpdateMenu;;
-            9*) selfDestroyMenu;;
-            *) printf "Unrecognized main menu action: %s\n" "$action" >&2
-                exit 1
-        esac
+    menuDraw
+}
+
+function handle_jump_inside() {
+    runInContainer /usr/bin/env SPLASH_SCREEN=1 /bin/bash
+}
+
+function show_build_progress() {
+    local progress='logs/progress.log'
+    until [ -f $progress ]; do
+        pause \
+            title="$1" \
+            text='The build has not started yet. Retrying...' \
+            seconds=3 || return 0
     done
+    text file=$progress follow='true' width=90% height=90%
+    return 0
 }
 
-function sourcesMenu() {
-    local action jobs
-    while true; do
-        if ! action="$(whiptail \
-            --backtitle "$__MENU_BACKTITLE__" \
-            --title 'Sources' \
-            --cancel-button 'Return' \
-            --menu 'Select an action' 0 0 0 \
-            '1) Init' 'Set repo URL to an android project' \
-            '2) Sync All' 'Sync all sources' \
-            '3) Selective Sync' 'Selectively sync projects in "local_manifests/"' \
-            '4) Selective Sync (cached)' 'Same as option n.3 but reuses a cached repo list' \
-            3>&1 1>&2 2>&3)"; then
-            return 0
-        fi
+function show_logs() {
+    local log_file="${__ARGS__['out-dir']}/verbose.log.gz" err
+    if ! err="$(gzip --test "$log_file" 2>&1)"; then
+        text title="$1" text="$(cat << EOL
+Failed to read logs.
+Hint: If the build is currently running, try again after the build will terminate.
 
-        if [ -d local_manifests ]; then
-            rsync --archive \
-                --delete \
-                --include '*/' \
-                --include '*.xml' \
-                --exclude '*' \
-                local_manifests/ "${__ARGS__['src-dir']}"/.repo/local_manifests/
-        fi
-
-        case "$action" in
-            1*) sourcesMenu__repoInit;;
-            2*) sourcesMenu__repoSync;;
-            3*) sourcesMenu__repoSyncLocalManifest;;
-            4*) sourcesMenu__repoSyncLocalManifest \
-                "$(cat "$__HOME_DIR__"/.repo-list.raw 2>/dev/null)";;
-            *) printf "Undefined source menu action: %s\n" "$action" >&2
-                exit 1
-        esac
-    done
-}
-
-function sourcesMenu__repoInit() {
-    if ! containerQuery 'repo-init' \
-        "${__ARGS__['repo-url']}" \
-        "${__ARGS__['repo-revision']}"; then
-            showLogs
-    fi
-}
-
-function sourcesMenu__repoSync() {
-    local jobs
-    if ! jobs="$(insertJobNum)"; then
-        return 0
-    fi
-
-    if containerQuery 'repo-sync' "$jobs" "$@"; then
-        whiptail \
-            --backtitle "$__MENU_BACKTITLE__" \
-            --title 'Success' \
-            --msgbox 'The source code was successfully synced' \
-            0 0
-    else
-        showLogs
-    fi
-}
-
-function sourcesMenu__repoSyncLocalManifest() {
-    local repo_list_raw="${1:-}"
-    if [ -z "$repo_list_raw" ]; then
-        printf "Generating project list...\n"
-        if ! repo_list_raw="$(containerQuery 'repo-local-list')"; then
-            printf -- "%s\n" "$repo_list_raw" >&2
-            showLogs
-            return 0
-        fi
-        echo "$repo_list_raw" > "$__HOME_DIR__"/.repo-list.raw
-    fi
-
-    declare -a repo_list=()
-    local path
-    while IFS=$'\n\r' read -r path; do
-        if [ -z "$path" ]; then
-            continue
-        fi
-
-        repo_list+=("$path" '' 'OFF')
-    done <<< "$repo_list_raw"
-
-    if [ ${#repo_list[@]} -eq 0 ]; then
-        local msg
-        msg="$(cat << EOL
-No projects found in your local_manifests/ or a
-full sync was never executed.
+$err
 EOL
         )"
-        whiptail \
-            --backtitle "$__MENU_BACKTITLE__" \
-            --title 'Error' \
-            --msgbox "$msg" \
-            0 0
-
         return 0
     fi
 
-    local choices
-    if ! choices="$(whiptail \
-        --backtitle "$__MENU_BACKTITLE__" \
-        --title 'Project list' \
-        --checklist \
-        --separate-output \
-        "Select projects to sync\nHint: use space bar to select" 0 0 0 \
-        "${repo_list[@]}" \
-        3>&1 1>&2 2>&3)"; then
-        return 0
-    fi
-
-    declare -a repo_list_choices=()
-    while read -r path; do
-        if [ -z "$path" ]; then
-            continue
-        fi
-
-        repo_list_choices+=("$path")
-    done <<< "$choices"
-
-    if [ ${#repo_list_choices[@]} -eq 0 ]; then
-        return 0
-    fi
-
-    sourcesMenu__repoSync "${repo_list_choices[@]}"
-}
-
-function buildMenu() {
-    local action build_metalava=false metalava_msg jobs query
-    while true; do
-        if ! action="$(whiptail \
-            --backtitle "$__MENU_BACKTITLE__" \
-            --title 'Build' \
-            --cancel-button 'Return' \
-            --menu 'Select an action' 0 0 0 \
-            '1) Build ROM' 'Start/resume a ROM build' \
-            '2) Build Kernel' 'Start/resume a Kernel build only' \
-            '3) Build SELinux Policy' 'Start/resume SELinux Policy build only' \
-            3>&1 1>&2 2>&3)"; then
-            return 0
-        fi
-
-        metalava_msg="$(cat << EOL
-Do you want to (re)build metalava doc packages before actually
-initializing the build?
-
-NOTE: building metalava doc packages separately allows to avoid
-      huge compile times.
-      Keep in mind, that you will need to rebuild metalava every
-      time you make significant changes to the Android source code,
-      ex. after 'repo sync'.
-EOL
-    )"
-        if whiptail \
-            --title 'Build metalava doc packages' \
-            --yesno "$metalava_msg" \
-            --defaultno 0 0 3>&1 1>&2 2>&3; then
-            build_metalava=true
-        fi
-
-        if ! jobs="$(insertJobNum)"; then
-            continue
-        fi
-
-        case "$action" in
-            1*) query='build-rom';;
-            2*) query='build-kernel';;
-            3*) query='build-selinux';;
-            *) printf "Undefined build menu action: %s\n" "$action" >&2
-                exit 1
-        esac
-
-        containerQuery "$query" \
-            "${__ARGS__['lunch-system']}" \
-            "${__ARGS__['lunch-device']}" \
-            "${__ARGS__['lunch-flavor']}" \
-            $build_metalava \
-            "$jobs"
-
-        exit $?
-    done
-}
-
-function stopMenu() {
-    local msg
-    msg="$(cat << EOL
-Are you sure you want to stop whatever is running in container
-(ROM/Kernel/SELinux building or source tree syncing)?
-EOL
-)"
-    if ! whiptail \
-        --title 'Graceful stop' \
-        --yesno "$msg" \
-        --defaultno \
-        0 0 \
-        3>&1 1>&2 2>&3; then
-        return 0
-    fi
-
-    if ! assertIsRunningContainer; then
-        whiptail \
-            --backtitle "$__MENU_BACKTITLE__" \
-            --title 'Error' \
-            --msgbox "No tasks are currently running." \
-            0 0
-
-        return 0
-    fi
-
-    if [ "$PWD" != "$(getRunningContainerPWD)" ]; then
-        anotherInstanceRunningConfirmDialog || return 0
-    fi
-
-    coproc { sudo docker container stop "$__CONTAINER_NAME__"; }
-    local pid="$COPROC_PID"
-
-    printf "Attempt to gracefully stop all tasks...\n"
-    if wait "$pid"; then
-        whiptail \
-            --backtitle "$__MENU_BACKTITLE__" \
-            --title 'Success' \
-            --msgbox "All tasks were successfully stopped." \
-            0 0
-    else
-        showLogs
-    fi
-}
-
-function suspendMenu() {
-    local action
-    if ! action="$(whiptail \
-        --backtitle "$__MENU_BACKTITLE__" \
-        --title 'Suspend/Hibernate' \
-        --menu 'Select power-off type' 0 0 0 \
-        --cancel-button 'Return' \
-        '1) Suspend' 'Save the session to RAM and put the PC in low power consumption mode' \
-        '2) Hibernate' 'Save the session to disk and completely power off the PC' \
-        3>&1 1>&2 2>&3
-    )"; then
-        return 0
-    fi
-
-    if ! whiptail \
-        --title 'Suspend/Hibernate' \
-        --yesno "Are you sure you want to suspend/hibernate the machine?" \
-        --defaultno \
-        0 0 \
-        3>&1 1>&2 2>&3; then
-        return 0
-    fi
-
-    case "$action" in
-        1*) systemctl suspend;;
-        2*) systemctl hibernate;;
-        *) printf "Undefined suspend menu action: %s\n" "$action" >&2
-            exit 1
-    esac
-}
-
-function progressMenu() {
-    until tail --follow logs/progress.log 2>/dev/null; do
-        printf "The build has not started yet. Retrying...\n" >&2
-        sleep 2
-    done
-}
-
-function logsMenu() {
-    local log_file="${__ARGS__['out-dir']}/verbose.log.gz"
-    if ! gzip --test "$log_file"; then
-        printf "Failed to read logs.\n" >&2
-        printf "Hint: If the build is currently running, try again\n" >&2
-        printf "after the build will terminate.\n\n" >&2
-        showLogs
-        return 0
-    fi
-
-    gzip --stdout --decompress "$log_file" | less -R
-}
-
-function selfUpdateMenu() {
-    if [ ! -d .git ]; then
-        printf "Cannot find '.git' directory. Please, follow the installation\n" >&2
-        printf "guide and make sure the directory structure complies with\n" >&2
-        printf "the requirements.\n" >&2
-        exit 1
-    fi
-
-    if assertIsRunningContainer; then
-        if [ "$PWD" != "$(getRunningContainerPWD)" ]; then
-            anotherInstanceRunningConfirmDialog || return 0
-        else
-            printf "Found a running container, stopping...\n" >&2
-        fi
-        sudo docker container stop $__CONTAINER_NAME__ || exit $?
-    fi
-
-    git pull --rebase && (
-        cd "$__DIR__" &&
-        git pull --recurse-submodules --force --rebase origin master
-    ) || exit $?
-
-    printf "You've successfully upgraded. Run the builder again when you wish it ;)\n"
-    exit 0
-}
-
-function selfDestroyMenu() {
-    local msg; msg="$(cat << EOL
-Are you sure you want to kill all running tasks and remove Docker image from disk?
-
-NOTE: this won't remove sources or out files. You have to remove
-      them manually.
-EOL
-    )"
-    if ! whiptail \
-        --title 'Self-destroy' \
-        --yesno "$msg" \
-        --defaultno \
-        0 0 \
-        3>&1 1>&2 2>&3; then
-        return 0
-    fi
-
-    if assertIsRunningContainer; then
-        if [ "$PWD" != "$(getRunningContainerPWD)" ]; then
-            anotherInstanceRunningConfirmDialog || return 0
-        else
-            printf "Found a running container, stopping...\n" >&2
-        fi
-        sudo docker container stop $__CONTAINER_NAME__ || exit $?
-    fi
-
-    local img_list id tag
-    printf "Retrieving image list...\n" >&2
-    img_list="$(getImageList)"
-
-    while IFS='=' read -r id tag; do
-        if [ -n "$id" ] && [ -n "$tag" ]; then
-            printf "Removing image with tag: %s\n" "$tag" >&2
-            sudo docker rmi "$id"
-        fi
-    done <<< "$img_list"
-
-    if [ -z "$img_list" ]; then
-        printf "No images to remove.\n" >&2
-    fi
+    gzip --stdout --decompress "$log_file" | less -R || return 0
 }
 
 function containerQuery() {
@@ -499,17 +170,15 @@ function containerQuery() {
 
 function buildImageIfNone() {
     if ! sudo docker inspect --type image "$__IMAGE_TAG__" &> /dev/null; then
-        if assertIsRunningContainer; then
+        if isContainerRunning; then
             if [ "$PWD" != "$(getRunningContainerPWD)" ]; then
-                anotherInstanceRunningConfirmDialog || return $?
-            else
-                printf "Found a running container, stopping...\n" >&2
+                anotherInstanceRunningConfirmDialog || return 0
             fi
-            sudo docker container stop $__CONTAINER_NAME__ || exit $?
+            sudo docker container stop "$__CONTAINER_NAME__" || return $?
         fi
         local id tag
         while IFS='=' read -r id tag; do
-            if [ -n "$id" ] && [ -n "$tag" ] && [ "$tag" != $__IMAGE_VERSION__ ]; then
+            if [ -n "$id" ] && [ -n "$tag" ] && [ "$tag" != "$__IMAGE_VERSION__" ]; then
                 printf "Removing unused image with tag: %s\n" "$tag" >&2
                 sudo docker rmi "$id"
             fi
@@ -524,10 +193,10 @@ function buildImageIfNone() {
                 --build-arg UID="${__USER_IDS__['uid']}" \
                 --build-arg GID="${__USER_IDS__['gid']}" \
                 --tag "$__IMAGE_TAG__" \
-                "${DOCKER_BUILD_PATH:-"$__DIR__"/Dockerfile/}" || exit $?
+                "${DOCKER_BUILD_PATH:-"$__DIR__"/Dockerfile/}" || return $?
         else
             printf "Note: Unable to find '%s' image. Pulling from repository...\n" "$__IMAGE_TAG__" >&2
-            sudo docker pull "$__IMAGE_TAG__" || exit $?
+            sudo docker pull "$__IMAGE_TAG__" || return $?
         fi
     fi
 
@@ -560,20 +229,20 @@ function copyFilesToHost() {
         if [ $running -eq 0 ]; then
             if assertIsRunningContainer; then
                 printf "Found a running container, stopping...\n" >&2
-                sudo docker container stop "$__CONTAINER_NAME__" >/dev/null || exit $?
+                sudo docker container stop "$__CONTAINER_NAME__" >/dev/null || return $?
             fi
             sudo docker run \
                 --interactive \
                 --rm \
                 --name "$__CONTAINER_NAME__" \
                 --detach=true \
-                "$__IMAGE_TAG__" >&2 || exit $?
+                "$__IMAGE_TAG__" >&2 || return $?
             running=1
         fi
 
         sudo docker container cp \
             --archive \
-            "$__CONTAINER_NAME__":"$source_" "$target" || exit $?
+            "$__CONTAINER_NAME__":"$source_" "$target" || return $?
     done
 
     if [ $running -eq 1 ]; then
@@ -587,8 +256,9 @@ function copyFilesToHost() {
             "${__USER_IDS__['uid']}":"${__USER_IDS__['gid']}" \
             "${flist[@]}" &&
 
-        sudo docker container stop "$__CONTAINER_NAME__" >/dev/null || exit $?
+        sudo docker container stop "$__CONTAINER_NAME__" >/dev/null || return $?
     fi
+    return 0
 }
 
 function setUpUser() {
@@ -620,7 +290,7 @@ function runInContainer() {
 
     touch "$__MISC_DIR__"/.bash_profile
 
-    if ! assertIsRunningContainer; then
+    if ! isContainerRunning; then
         sudo docker run \
             --detach \
             --interactive \
@@ -648,21 +318,15 @@ function runInContainer() {
             --volume "$PWD"/logs:/mnt/logs \
             --volume "$PWD/$__HOME_DIR__":"$home" \
             --volume "$PWD/$__MISC_DIR__":/mnt/misc \
-            "$__IMAGE_TAG__" >&2 || exit $?
+            "$__IMAGE_TAG__" >&2 || return $?
     elif [ "$PWD" != "$(getRunningContainerPWD)" ]; then
-        local msg
-        msg="$(cat << EOL
+        text text="$(cat << EOL
 Another instance of the builder is already running for the project at
 $(getRunningContainerPWD)
 
 Use the "Stop tasks" option in the main menu to stop all running tasks.
 EOL
         )"
-        whiptail \
-            --backtitle "$__MENU_BACKTITLE__" \
-            --title 'Error' \
-            --msgbox "$msg" \
-            0 0
         return 0
     fi
 
@@ -681,34 +345,39 @@ EOL
         --env APP_VERSION="$__VERSION__" \
         --env __REPO_URL__="${__ARGS__['repo-url']}" \
         --env __REPO_REVISION__="${__ARGS__['repo-revision']}" \
-        $__CONTAINER_NAME__ "$@" || exit $?
+        "$__CONTAINER_NAME__" "$@" || return $?
 }
 
 function getImageList() {
-    sudo docker images --format '{{.ID}}={{.Tag}}' $__REPOSITORY__
+    sudo docker images --format '{{.ID}}={{.Tag}}' "$__REPOSITORY__"
 }
 
 function insertJobNum() {
-    local jobs msg
-    msg="$(cat << EOL
+    local cpus; cpus="$(nproc --all)" || cpus=8
+    range text="$(cat << EOL
 Insert how many jobs you want run in parallel?
 
 NOTE: this number, N, is the same as the one you normally use while
       running 'make -jN' or 'repo sync -jN'.
 EOL
-    )"
-whiptail \
-    --backtitle "$__MENU_BACKTITLE__" \
-    --title 'Job number' \
-    --inputbox "$msg" \
-    0 0 "$(nproc --all)" \
-    3>&1 1>&2 2>&3
+    )" min=1 default="$cpus" max=$((cpus ** 2))
 }
 
-function assertIsRunningContainer() {
+function performGracefulStop() {
+    if ! sudo docker container stop "$__CONTAINER_NAME__" >/dev/null 2> >(program \
+        text='Found a running container, stopping...' \
+        hideOk='true' \
+        width=50% \
+        height=50%); then
+        return 1
+    fi
+    return 0
+}
+
+function isContainerRunning() {
     local id
     id="$(sudo docker container ls \
-        --filter name=$__CONTAINER_NAME__ \
+        --filter name="$__CONTAINER_NAME__" \
         --filter status=running \
         --quiet)"
 
@@ -720,20 +389,13 @@ function getRunningContainerPWD() {
 }
 
 function anotherInstanceRunningConfirmDialog() {
-    local msg
-    msg="$(cat << EOL
+    confirm text="$(cat << EOL
 This operation requires the Docker container to be stopped, but another instance
 of the builder is already running for the project at $(getRunningContainerPWD)
 
 Are you sure you want to continue?
 EOL
-    )"
-    whiptail \
-        --title 'Warning' \
-        --yesno "$msg" \
-        --defaultno \
-        0 0 \
-        3>&1 1>&2 2>&3
+    )" \( --defaultno \)
 }
 
 function clearLine() {
