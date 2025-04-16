@@ -16,10 +16,7 @@ if isContainerRunning; then
     performGracefulStop || return $?
 fi
 
-if git pull --rebase && (
-    cd "$__DIR__" &&
-    git pull --recurse-submodules --force --rebase origin master
-); then
+if git pull --rebase && git submodule update --init --recursive --remote --force --rebase; then
     text text="You've successfully upgraded. Run the builder again when you wish it ;)"
 fi
 return 1 # exit app
