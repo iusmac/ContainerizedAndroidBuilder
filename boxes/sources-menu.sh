@@ -3,15 +3,6 @@
 config title="$1"
 
 function main() {
-    if [ -d local_manifests ]; then
-        rsync --archive \
-            --delete \
-            --include '*/' \
-            --include '*.xml' \
-            --exclude '*' \
-            local_manifests/ "${__ARGS__['src-dir']}"/.repo/local_manifests/
-    fi
-
     menu \
         text='Select an action' \
         cancelLabel='Return' \
@@ -26,6 +17,7 @@ function main() {
 }
 
 function handle_repo_init() {
+    sync_local_manifests
     if ! containerQuery 'repo-init' "${__ARGS__['repo-url']}" "${__ARGS__['repo-revision']}"; then
         showLogs
     fi
@@ -33,6 +25,7 @@ function handle_repo_init() {
 
 function handle_repo_sync() {
     config title="$1"
+    sync_local_manifests
     # shellcheck disable=2119
     repo_sync
 }
@@ -54,11 +47,13 @@ function repo_sync() {
 
 function handle_repo_sync_local_manifest() {
     config title="$1"
+    sync_local_manifests
     repo_sync_projects
 }
 
 function handle_repo_sync_local_manifest_cached() {
     config title="$1"
+    sync_local_manifests
     repo_sync_projects "$(cat "$__HOME_DIR__"/.repo-list.raw 2>/dev/null)"
 }
 
@@ -93,6 +88,17 @@ function repo_sync_projects() {
         text text='No projects found in your local_manifests/ or a full sync was never executed.'
     fi
     return 0
+}
+
+function sync_local_manifests() {
+    if [ -d local_manifests ]; then
+        rsync --archive \
+            --delete \
+            --include '*/' \
+            --include '*.xml' \
+            --exclude '*' \
+            local_manifests/ "${__ARGS__['src-dir']}"/.repo/local_manifests/
+    fi
 }
 
 main "$@"
