@@ -187,7 +187,7 @@ function buildImageIfNone() {
         if [ "${DOCKER_BUILD_IMAGE:-0}" = '1' ]; then
             printf "Note: Unable to find '%s' image. Start building...\n" "$__IMAGE_TAG__" >&2
             printf "This may take a while...\n\n" >&2
-            sudo DOCKER_BUILDKIT=1 docker build \
+            sudo docker build \
                 --no-cache \
                 --build-arg EMAIL="${__ARGS__['email']}" \
                 --build-arg UID="${__USER_IDS__['uid']}" \
