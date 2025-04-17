@@ -39,17 +39,19 @@ function main() {
                 --jobs="$jobs" "${extra_args[@]}" -- "$@"
             ;;
         'repo-local-list')
-            set -o pipefail
-
-            local path
-            repo list --path-only | while read -r path; do
+            local path list
+            if ! list="$(repo list --path-only 2>&1)"; then
+                printf "%s\n" "$list"
+                return 1
+            fi
+            while read -r path; do
                 if grep \
                     --recursive \
                     --quiet \
                     "<project.*path=\"$path\"" .repo/local_manifests/; then
                     printf -- "%s\n" "$path"
                 fi
-            done
+            done <<< "$list"
             ;;
         'build-rom'|'build-kernel'|'build-selinux')
             local lunch_system="${1?}" \
