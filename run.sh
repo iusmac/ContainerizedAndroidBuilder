@@ -179,14 +179,14 @@ function buildImageIfNone() {
         local id tag
         while IFS='=' read -r id tag; do
             if [ -n "$id" ] && [ -n "$tag" ] && [ "$tag" != "$__IMAGE_VERSION__" ]; then
-                printf "Removing unused image with tag: %s\n" "$tag" >&2
+                printf "Removing unused image with tag: %s\n" "$tag"
                 sudo docker rmi "$id"
             fi
         done <<< "$(getImageList)"
 
         if [ "${DOCKER_BUILD_IMAGE:-0}" = '1' ]; then
-            printf "Note: Unable to find '%s' image. Start building...\n" "$__IMAGE_TAG__" >&2
-            printf "This may take a while...\n\n" >&2
+            printf "Note: Unable to find '%s' image. Start building...\n" "$__IMAGE_TAG__"
+            printf "This may take a while...\n\n"
             sudo docker build \
                 --no-cache \
                 --build-arg EMAIL="${__ARGS__['email']}" \
@@ -195,7 +195,7 @@ function buildImageIfNone() {
                 --tag "$__IMAGE_TAG__" \
                 "${DOCKER_BUILD_PATH:-"$__DIR__"/Dockerfile/}" || return $?
         else
-            printf "Note: Unable to find '%s' image. Pulling from repository...\n" "$__IMAGE_TAG__" >&2
+            printf "Note: Unable to find '%s' image. Pulling from repository...\n" "$__IMAGE_TAG__"
             sudo docker pull "$__IMAGE_TAG__" || return $?
         fi
     fi
@@ -225,10 +225,10 @@ function copyFilesToHost() {
             continue
         fi
 
-        printf "Copying missing target to host: %s\n" "$target" >&2
+        printf "Copying missing target to host: %s\n" "$target"
         if [ $running -eq 0 ]; then
             if assertIsRunningContainer; then
-                printf "Found a running container, stopping...\n" >&2
+                printf "Found a running container, stopping...\n"
                 sudo docker container stop "$__CONTAINER_NAME__" >/dev/null || return $?
             fi
             sudo docker run \
@@ -236,7 +236,7 @@ function copyFilesToHost() {
                 --rm \
                 --name "$__CONTAINER_NAME__" \
                 --detach=true \
-                "$__IMAGE_TAG__" >&2 || return $?
+                "$__IMAGE_TAG__" || return $?
             running=1
         fi
 
@@ -246,7 +246,7 @@ function copyFilesToHost() {
     done
 
     if [ $running -eq 1 ]; then
-        printf "Finishing...\n" >&2
+        printf "Finishing...\n"
         # TODO: this is a workaround because '--archive' argument for 'docker
         # container cp' command is broken. Check from time to time if it has
         # been fixed.
@@ -285,8 +285,8 @@ function runInContainer() {
         use_ccache=${__ARGS__['ccache-disabled']}
     use_ccache=$((use_ccache ^= 1))
 
-    buildImageIfNone &&
-    setUpUser "$uid" "$gid" "$home" || return $?
+    buildImageIfNone >&2 &&
+    setUpUser "$uid" "$gid" "$home" >&2 || return $?
 
     touch "$__MISC_DIR__"/.bash_profile
 
