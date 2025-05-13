@@ -38,7 +38,7 @@ function repo_sync() {
     fi
 
     if containerQuery 'repo-sync' "$jobs" "$@"; then
-        text summary='The source code was successfully synced'
+        text text='The source code was successfully synced'
     else
         showLogs
     fi
