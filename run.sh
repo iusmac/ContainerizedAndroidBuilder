@@ -90,12 +90,14 @@ function main() {
         fi
     done
 
-    if [ -z "${__ARGS__['timezone']}" ]; then
-        local timezone
-        if ! timezone="$(timedatectl | awk '/Time zone:/ { print $3 }')"; then
-            timezone="$(curl --fail-early --silent 'http://ip-api.com/line?fields=timezone')"
+    local -n timezone=__ARGS__['timezone']
+    if [ -z "$timezone" ]; then
+        if ! timezone="$(timedatectl show -P 'Timezone' 2>/dev/null)" &&
+            # Note: /etc/timezone can be a directory (seen on Ubuntu Server) or
+            # absent (e.g., Manjaro)
+            [ -f /etc/timezone ]; then
+            timezone="$(cat /etc/timezone)"
         fi
-        __ARGS__['timezone']="$timezone"
     fi
 
     for arg in \
@@ -307,7 +309,6 @@ function runInContainer() {
             --label lunch_flavor="${__ARGS__['lunch-flavor']}" \
             --volume "$PWD/$__CACHE_DIR__"/passwd:/etc/passwd:ro \
             --volume "$PWD/$__CACHE_DIR__"/group:/etc/group:ro \
-            --volume /etc/timezone:/etc/timezone:ro \
             --volume /etc/localtime:/etc/localtime:ro \
             --volume "$__DIR__"/.bashrc_extra:/mnt/.bashrc_extra \
             --volume "$__DIR__"/entrypoint:/mnt/entrypoint \
