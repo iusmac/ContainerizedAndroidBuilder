@@ -196,7 +196,7 @@ If you'd like to build as fast as possible, try to apply as many of these tips a
 Although Google suggests you to have at least 16GB of RAM in order to build Android, you may still occasionally observe the build being killed by the Out of Memory (OOM) killer.
 
 To be able to build on 16GB (even 8GB) RAM machine without being killed by the Out of Memory (OOM) killer, apply these patches in _[SRC_DIR]/build/soong_ directory:
-<details><summary>For Android 15:</summary>
+<details><summary>For Android 15/16:</summary>
 
 ```diff
 diff --git a/java/droidstubs.go b/java/droidstubs.go
