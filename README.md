@@ -145,7 +145,7 @@ Usage: ./run.sh
 **Description of required arguments:**
 Argument                                     | Description
 -------------------------------------------- | -----------
-`--android ANDROID`                          | Android version to build. Possible values: `10.0`, `11.0`, `12.0`, `12.1`, `13.0`, `14.0`
+`--android ANDROID`                          | Android version to build. Example: `16.0`
 `--repo-url URL`                             | URL for `repo init -u {URL}` command. Example: `https://android.googlesource.com/platform/manifest`
 `--repo-revision REVISION_NAME`              | Branch/revision for `repo init -u {URL} -b {REVISION_NAME}` command. Example: `main`
 `--lunch-system SYSTEM`                      | System name for `lunch {SYSTEM}_device-flavor` command. Example: `aosp`
