@@ -229,7 +229,7 @@ function copyFilesToHost() {
 
         printf "Copying missing target to host: %s\n" "$target"
         if [ $running -eq 0 ]; then
-            if assertIsRunningContainer; then
+            if isContainerRunning; then
                 printf "Found a running container, stopping...\n"
                 sudo docker container stop "$__CONTAINER_NAME__" >/dev/null || return $?
             fi
