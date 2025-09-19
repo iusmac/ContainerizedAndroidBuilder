@@ -11,7 +11,7 @@ ARG GID
 ENV USER android
 ENV DEBIAN_FRONTEND noninteractive
 ENV SRC_DIR /mnt/src
-ENV OUT_DIR /mnt/out
+ENV OUT_DIR_VOLUME /mnt/out
 ENV CCACHE_DIR /mnt/ccache
 ENV CCACHE_EXEC /usr/bin/ccache
 ENV LOGS_DIR /mnt/logs
@@ -31,14 +31,14 @@ RUN groupadd --gid $GID $USER && \
 # Delcare volume list
 #-------------------#
 VOLUME $SRC_DIR
-VOLUME $OUT_DIR
+VOLUME $OUT_DIR_VOLUME
 VOLUME $CCACHE_DIR
 VOLUME $LOGS_DIR
 VOLUME $ZIP_DIR
 
 # Create volum directories
 #------------------------#
-RUN mkdir -p $SRC_DIR/ $OUT_DIR/ $CCACHE_DIR/ $LOGS_DIR/ $ZIP_DIR/
+RUN mkdir -p $SRC_DIR/ $OUT_DIR_VOLUME/ $CCACHE_DIR/ $LOGS_DIR/ $ZIP_DIR/
 
 # Install build dependencies
 #--------------------------#

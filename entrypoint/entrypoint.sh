@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 function main() {
+    setupOutDir || exit $?
+
     local query="$1"; shift
     case "$query" in
         'repo-init')
@@ -129,7 +131,7 @@ function main() {
                     fi
 
                     if [ -n "$file_pattern" ]; then
-                        find "$OUT_DIR/target/product/$lunch_device" \
+                        find "out/target/product/$lunch_device" \
                             -maxdepth 1 \
                             -type f \
                             -name "$file_pattern" \
@@ -201,6 +203,15 @@ function log() {
 
 function isAtLeastU() {
     [[ ${ANDROID_VERSION%%.*} -ge 14 ]]
+}
+
+function setupOutDir() {
+    local out=$SRC_DIR/out
+    if [ ! -L "$out" ]; then
+        # Point the host "out" directory to "src/out" directory via a symlink,
+        # which lines up with the default AOSP directory structure
+        ln -s "$OUT_DIR_VOLUME" "$out" || return $?
+    fi
 }
 
 main "$@"
