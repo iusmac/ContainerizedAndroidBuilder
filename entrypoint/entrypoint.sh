@@ -69,7 +69,7 @@ function main() {
             log 'Initializing build...' \
                 "- Lunch system: $lunch_system" \
                 "- Lunch device: $lunch_device" \
-                "- Lunch release: $lunch_release" \
+                "- Lunch release: ${lunch_release:--}" \
                 "- Lunch flavor: $lunch_flavor" \
                 "- Ccache enabled: $USE_CCACHE" \
                 "- Ccache size: $CCACHE_SIZE" \

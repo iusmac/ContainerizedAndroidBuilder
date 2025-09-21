@@ -76,7 +76,8 @@ $(bold 'Current environment settings')
 
 $(bold 'Current build settings')
     $(bold '•') Android version: $ANDROID_VERSION
-    $(bold '•') Lunch: $(italic '(system)') $LUNCH_SYSTEM $(italic '(device)') $LUNCH_DEVICE $(italic '(flavor)') $LUNCH_FLAVOR
+    $(bold '•') Lunch: $(italic '(system)') $LUNCH_SYSTEM $(italic '(device)') $LUNCH_DEVICE $(italic '(flavor)') $LUNCH_FLAVOR \
+$(italic '(branch)') $(isAtLeastU && getLunchRelease || echo '-')
     $(bold '•') Move to zips directory: $(toBoolean "$MOVE_ZIPS")
 
 $(bold 'Current Android source Repo settings')
@@ -91,7 +92,7 @@ $(bold 'Aliases & commands')
 
     $(bold 'lunch_')
         Shorthand to $(italic 'lunch system_device-flavor') command that, when executed,
-        will print something like $(italic 'lunch aosp_marlin_userdebug') but with your
+        will print something like $(italic 'lunch aosp_marlin-userdebug') but with your
         build values, allowing you to edit it before running it.
 
 EOL
