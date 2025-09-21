@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-readonly __VERSION__='1.5.2'
+readonly __VERSION__='1.6.0'
 readonly __IMAGE_VERSION__='1.2.1'
 __DIR__="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 readonly __DIR__
