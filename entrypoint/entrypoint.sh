@@ -61,14 +61,9 @@ function main() {
                 jobs="${5?}"
 
             local lunch_release
-            if isAtLeastU; then
-                local build_id;
-                if ! build_id="$(grep --max-count=1 'BUILD_ID=' build/core/build_id.mk)" ||
-                    ! lunch_release="$(sed -n 's/BUILD_ID=\([^\.]\+\).*/\L\1/p' <<< "$build_id")" ||
-                    [ -z "$lunch_release" ]; then
-                    printf "Failed to parse release branch name for lunch command.\n" >&2
-                    exit 1
-                fi
+            if isAtLeastU && ! lunch_release="$(getLunchRelease)"; then
+                printf "Failed to parse release branch name for lunch command.\n" >&2
+                exit 1
             fi
 
             log 'Initializing build...' \
@@ -197,10 +192,6 @@ function log() {
             printf "%${n_spaces}s%s\n" '' "$line" | tee -a "$log_file"
         done
     fi
-}
-
-function isAtLeastU() {
-    [[ ${ANDROID_VERSION%%.*} -ge 14 ]]
 }
 
 main "$@"

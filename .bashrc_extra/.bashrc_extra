@@ -8,11 +8,16 @@ function lunch_() {
         return 0
     fi
 
+    local lunch_release
+    if isAtLeastU && lunch_release="$(getLunchRelease)"; then
+        lunch_release="-$lunch_release"
+    fi
+
     italic 'Modify, if needed, and press enter to continue.'
     printf "\n\n"
     read -re \
         -p 'lunch ' \
-        -i "${LUNCH_SYSTEM}_${LUNCH_DEVICE}-${LUNCH_FLAVOR}" \
+        -i "${LUNCH_SYSTEM}_${LUNCH_DEVICE}$lunch_release-${LUNCH_FLAVOR}" \
         input
 
     lunch "$input"
@@ -45,6 +50,17 @@ function setupOutDir() {
         # which lines up with the default AOSP directory structure
         ln -s "$OUT_DIR_VOLUME" "$out" || return $?
     fi
+}
+
+function isAtLeastU() {
+    [[ ${ANDROID_VERSION%%.*} -ge 14 ]]
+}
+
+function getLunchRelease() {
+    local build_id lunch_release;
+    build_id="$(grep --max-count=1 'BUILD_ID=' "$SRC_DIR"/build/core/build_id.mk)" &&
+    lunch_release="$(sed -n 's/BUILD_ID=\([^\.]\+\).*/\L\1/p' <<< "$build_id")" &&
+    [ -n "$lunch_release" ] && echo "$lunch_release"
 }
 
 [ "$SPLASH_SCREEN" = '1' ] && cat <<- EOL
