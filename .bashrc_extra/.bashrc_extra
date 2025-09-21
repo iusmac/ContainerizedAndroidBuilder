@@ -38,6 +38,15 @@ function toBoolean() {
     [ "${1-}" -eq 1 ] && echo 'true' || echo 'false'
 }
 
+function setupOutDir() {
+    local out=$SRC_DIR/out
+    if [ ! -L "$out" ]; then
+        # Point the host "out" directory to "src/out" directory via a symlink,
+        # which lines up with the default AOSP directory structure
+        ln -s "$OUT_DIR_VOLUME" "$out" || return $?
+    fi
+}
+
 [ "$SPLASH_SCREEN" = '1' ] && cat <<- EOL
 
 $(bold "*** Welcome to ContainerizedAndroidBuilder ***")
@@ -70,3 +79,5 @@ $(bold 'Aliases & commands')
         build values, allowing you to edit it before running it.
 
 EOL
+
+setupOutDir || exit $?
