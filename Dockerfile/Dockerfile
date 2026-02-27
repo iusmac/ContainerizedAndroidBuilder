@@ -8,15 +8,15 @@ ARG GID
 
 # Environment variables
 #---------------------#
-ENV USER android
-ENV DEBIAN_FRONTEND noninteractive
-ENV SRC_DIR /mnt/src
-ENV OUT_DIR_VOLUME /mnt/out
-ENV CCACHE_DIR /mnt/ccache
-ENV CCACHE_EXEC /usr/bin/ccache
-ENV LOGS_DIR /mnt/logs
-ENV ZIP_DIR /mnt/zips
-ENV TERM xterm-256color
+ENV USER=android
+ENV DEBIAN_FRONTEND=noninteractive
+ENV SRC_DIR=/mnt/src
+ENV OUT_DIR_VOLUME=/mnt/out
+ENV CCACHE_DIR=/mnt/ccache
+ENV CCACHE_EXEC=/usr/bin/ccache
+ENV LOGS_DIR=/mnt/logs
+ENV ZIP_DIR=/mnt/zips
+ENV TERM=xterm-256color
 
 # Create host user
 #----------------#
