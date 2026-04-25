@@ -171,6 +171,11 @@ function containerQuery() {
 }
 
 function buildImageIfNone() {
+    # Preemptively authenticate to avoid false positive when detecting image
+    # absence in case authentication failure
+    if [ -x /bin/true ]; then
+        sudo /bin/true || return $?
+    fi
     if ! sudo docker inspect --type image "$__IMAGE_TAG__" &> /dev/null; then
         if isContainerRunning; then
             if [ "$PWD" != "$(getRunningContainerPWD)" ]; then
