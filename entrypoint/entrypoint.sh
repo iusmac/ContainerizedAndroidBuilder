@@ -145,7 +145,7 @@ function main() {
 
 function build_metalava() {
     case "$ANDROID_VERSION" in
-        12|12.*|13|13.0|14|14.0|15|15.0|16|16.0)
+        12|12.*|13|13.0|14|14.0|15|15.0|16|16.0|17.0)
             declare -a docs=(
                 'test-api-stubs-docs-non-updatable'
                 'api-stubs-docs-non-updatable'
