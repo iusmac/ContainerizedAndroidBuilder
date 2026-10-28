@@ -1,4 +1,4 @@
-FROM debian:bookworm
+FROM debian:trixie
 
 LABEL maintainer="iusmac <iusico.maxim@libero.it>"
 
@@ -48,8 +48,8 @@ RUN apt-get -y upgrade
 RUN apt-get install -y --no-install-recommends \
         bc bison build-essential ccache curl flex openssl ca-certificates \
         g++-multilib gcc-multilib git git-lfs gnupg gperf imagemagick \
-        lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool \
-        libncurses5 libncurses5-dev libsdl1.2-dev libssl-dev ssh \
+        lib32ncurses-dev lib32readline-dev lib32z1-dev lz4 \
+        libncurses6 libncurses-dev libsdl1.2-dev libssl-dev ssh \
         libwxgtk3.2-dev libxml2 libxml2-utils lzop pngcrush \
         rsync schedtool squashfs-tools xsltproc zip unzip zlib1g-dev vim
 
