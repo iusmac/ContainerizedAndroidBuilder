@@ -196,6 +196,23 @@ If you'd like to build as fast as possible, try to apply as many of these tips a
 Although Google suggests you to have at least 16GB of RAM in order to build Android, you may still occasionally observe the build being killed by the Out of Memory (OOM) killer.
 
 To be able to build on 16GB (even 8GB) RAM machine without being killed by the Out of Memory (OOM) killer, apply these patches in _[SRC_DIR]/build/soong_ directory:
+<details><summary>For Android 17:</summary>
+
+```diff
+diff --git a/java/kotlin.go b/java/kotlin.go
+index f47a169..f114bb0 100644
+--- a/java/kotlin.go
++++ b/java/kotlin.go
+@@ -476,6 +476,7 @@ var kspProcessingRule = pctx.AndroidRemoteStaticRule("ksp", android.RemoteRuleSu
+ 			inputDeltaCmd + ` && ` +
+ 			kotlinZipSyncCmd + ` && ` +
+ 			`${config.KotlinKspClientBinary} ` +
++			` ${config.KotlincHeapFlags} ` + // arm64-host (#25): avoid KSP JVM OOM on big modules
+ 			` -jvm-target=$kotlinJvmTarget ` +
+ 			` -project-base-dir=. ` +
+ 			` -module-name=$name ` +
+```
+</details>
 <details><summary>For Android 15/16:</summary>
 
 ```diff
